@@ -1,0 +1,1103 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  FileText,
+  Mail,
+  Download,
+  Edit,
+  Trash2,
+  Copy,
+  Plus,
+  TrendingUp,
+  Target,
+  User,
+  MoreHorizontal,
+  CheckCircle2,
+  Loader2,
+  Layout,
+  BookOpen,
+  FileDown,
+  Share2,
+  Sparkles,
+  X,
+} from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { truncate } from '@/lib/utils';
+import { TemplatePreview } from '@/components/template-preview';
+import type { TemplateLayout } from '@/components/template-preview';
+import { createClient } from '@/lib/supabase';
+
+const TEMPLATE_META: Record<string, { layout: TemplateLayout; accent: string }> = {
+  classic:   { layout: 'classic',   accent: '#4AB7A6' },
+  modern:    { layout: 'sidebar',   accent: '#1e293b' },
+  minimal:   { layout: 'minimal',   accent: '#1d4ed8' },
+  executive: { layout: 'executive', accent: '#0f172a' },
+  creative:  { layout: 'creative',  accent: '#7c3aed' },
+  simple:    { layout: 'centered',  accent: '#0891b2' },
+};
+
+interface ResumeRow {
+  id: string;
+  title: string;
+  updated_at: string;
+  ats_score: number | null;
+  template_id: string;
+}
+
+interface CoverLetterRow {
+  id: string;
+  title: string;
+  updated_at: string;
+  template_id: string;
+}
+
+function atsColor(score: number | null): string {
+  if (score == null) return '#9ca3af';
+  if (score >= 80) return '#16a34a';
+  if (score >= 60) return '#d97706';
+  return '#dc2626';
+}
+
+function atsBgColor(score: number | null): string {
+  if (score == null) return '#f3f4f6';
+  if (score >= 80) return '#f0fdf4';
+  if (score >= 60) return '#fffbeb';
+  return '#fef2f2';
+}
+
+function atsLabel(score: number | null): string {
+  if (score == null) return 'Not checked';
+  if (score >= 80) return 'Excellent';
+  if (score >= 60) return 'Good';
+  return 'Needs Work';
+}
+
+function formatEdited(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 2) return 'Edited 2 hours ago';
+  if (diffHours < 24) return `Edited ${diffHours} hours ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Edited yesterday';
+  if (diffDays < 7) return `Edited ${diffDays} days ago`;
+  return `Edited ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+}
+
+/** Returns a fake "strength" percentage derived from ATS score (60-95 range). */
+function calcStrength(atsScore: number | null): number {
+  if (atsScore == null) return 60;
+  // Map ATS score → strength in 60–95 range
+  return Math.min(95, Math.max(60, Math.round(atsScore * 0.85 + 12)));
+}
+
+// Mock data for demo sections
+const MOCK_RESUMES = [
+  { id: 'mock-1', title: 'Software Engineer Resume', updated_at: new Date(Date.now() - 2 * 3600000).toISOString(), ats_score: 87, template_id: 'classic' },
+  { id: 'mock-2', title: 'Marketing Manager CV', updated_at: new Date(Date.now() - 86400000).toISOString(), ats_score: 72, template_id: 'modern' },
+  { id: 'mock-3', title: 'Product Manager Resume', updated_at: new Date(Date.now() - 3 * 86400000).toISOString(), ats_score: 91, template_id: 'executive' },
+];
+
+const MOCK_COVER_LETTERS = [
+  { id: 'mock-cl-1', title: 'Stripe Application Letter', company: 'Stripe', updated_at: new Date(Date.now() - 86400000).toISOString(), template_id: 'professional' },
+  { id: 'mock-cl-2', title: 'Google PM Letter', company: 'Google', updated_at: new Date(Date.now() - 4 * 86400000).toISOString(), template_id: 'modern' },
+];
+
+const QUICK_ACTIONS = [
+  {
+    label: 'Check ATS Score',
+    description: 'See how well your resume performs against ATS filters',
+    href: '/dashboard/ats-checker',
+    icon: Target,
+    color: '#4AB7A6',
+    bg: '#f0fdfa',
+  },
+  {
+    label: 'Browse Templates',
+    description: '60+ professional templates designed by resume experts',
+    href: '/resume-templates',
+    icon: Layout,
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+  },
+  {
+    label: 'Get Resume Tips',
+    description: 'Expert guides and career advice to land more interviews',
+    href: '/resources',
+    icon: BookOpen,
+    color: '#2563eb',
+    bg: '#eff6ff',
+  },
+];
+
+// ── Share Modal ──────────────────────────────────────────────────────────────
+function ShareModal({ id, type, onClose }: { id: string; type: 'resume' | 'cover-letter'; onClose: () => void }) {
+  const link = `https://gethiretoday.com/${type === 'resume' ? 'resume' : 'cover-letter'}/public/${id}`;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback — select the input
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-slate-900">Share {type === 'resume' ? 'Resume' : 'Cover Letter'}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-sm text-slate-500 mb-3">Anyone with this link can view your {type === 'resume' ? 'resume' : 'cover letter'}.</p>
+        <div className="flex gap-2">
+          <input
+            readOnly
+            value={link}
+            className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none"
+          />
+          <button
+            onClick={handleCopy}
+            className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg text-white transition-colors"
+            style={{ backgroundColor: '#4AB7A6' }}
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm font-medium px-5 py-3 rounded-full shadow-lg">
+      {message}
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const router = useRouter();
+
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single();
+      setIsPro(
+        profile?.subscription_status === 'active' ||
+        profile?.subscription_status === 'trialing' ||
+        profile?.subscription_status === 'pro'
+      );
+    });
+  }, []);
+
+  const [resumes, setResumes] = useState<ResumeRow[]>([]);
+  const [loadingResumes, setLoadingResumes] = useState(true);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+
+  const [coverLetters, setCoverLetters] = useState<CoverLetterRow[]>([]);
+  const [loadingCoverLetters, setLoadingCoverLetters] = useState(true);
+
+  const [creatingResume, setCreatingResume] = useState(false);
+  const [creatingCoverLetter, setCreatingCoverLetter] = useState(false);
+
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [shareTarget, setShareTarget] = useState<{ id: string; type: 'resume' | 'cover-letter' } | null>(null);
+
+  const showToast = (msg: string) => setToastMessage(msg);
+
+  const handleNewResume = async () => {
+    setCreatingResume(true);
+    try {
+      const res = await fetch('/api/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Untitled Resume', template_id: 'classic', data: {} }),
+      });
+      if (res.ok) {
+        const { resume } = await res.json();
+        router.push(`/builder/resume/${resume.id}`);
+      }
+    } catch {
+      setCreatingResume(false);
+    }
+  };
+
+  const handleNewCoverLetter = async () => {
+    setCreatingCoverLetter(true);
+    try {
+      const res = await fetch('/api/cover-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Untitled Cover Letter',
+          template_id: 'professional',
+          data: {},
+          contact: {},
+        }),
+      });
+      if (res.ok) {
+        const { coverLetter } = await res.json();
+        router.push(`/builder/cover-letter/${coverLetter.id}`);
+      }
+    } catch {
+      setCreatingCoverLetter(false);
+    }
+  };
+
+  const fetchResumes = useCallback(async () => {
+    setLoadingResumes(true);
+    setResumeError(null);
+    try {
+      const res = await fetch('/api/resume');
+      if (res.status === 401) { router.push('/login'); return; }
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setResumes(data.resumes ?? []);
+    } catch {
+      setResumeError('Failed to load your resumes. Please refresh.');
+    } finally {
+      setLoadingResumes(false);
+    }
+  }, [router]);
+
+  const fetchCoverLetters = useCallback(async () => {
+    setLoadingCoverLetters(true);
+    try {
+      const res = await fetch('/api/cover-letter');
+      if (!res.ok) return;
+      const data = await res.json();
+      setCoverLetters(data.coverLetters ?? []);
+    } catch {
+      // non-fatal
+    } finally {
+      setLoadingCoverLetters(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchResumes();
+    fetchCoverLetters();
+  }, [fetchResumes, fetchCoverLetters]);
+
+  const handleDeleteResume = async (id: string) => {
+    if (!confirm('Delete this resume?')) return;
+    setResumes((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await fetch(`/api/resume/${id}`, { method: 'DELETE' });
+    } catch {
+      fetchResumes();
+    }
+  };
+
+  const handleDuplicateResume = async (resume: ResumeRow) => {
+    try {
+      const res = await fetch(`/api/resume/${resume.id}`);
+      if (!res.ok) return;
+      const { resume: full } = await res.json();
+      const createRes = await fetch('/api/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `${resume.title} (Copy)`,
+          template_id: resume.template_id,
+          data: full.data ?? {},
+        }),
+      });
+      if (createRes.ok) fetchResumes();
+    } catch {}
+  };
+
+  const handleDeleteCoverLetter = async (id: string) => {
+    if (!confirm('Delete this cover letter?')) return;
+    setCoverLetters((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await fetch(`/api/cover-letter/${id}`, { method: 'DELETE' });
+    } catch {
+      fetchCoverLetters();
+    }
+  };
+
+  const handleDuplicateCoverLetter = async (cl: CoverLetterRow) => {
+    try {
+      const res = await fetch(`/api/cover-letter/${cl.id}`);
+      if (!res.ok) return;
+      const { coverLetter: full } = await res.json();
+      const createRes = await fetch('/api/cover-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `${cl.title} (Copy)`,
+          template_id: cl.template_id,
+          data: full.data ?? {},
+          contact: full.contact ?? {},
+        }),
+      });
+      if (createRes.ok) fetchCoverLetters();
+    } catch {}
+  };
+
+  const handleDownloadPdf = (id: string) => {
+    setDownloadingId(id);
+    showToast('Opening resume builder to download PDF...');
+    setTimeout(() => {
+      setDownloadingId(null);
+      router.push(`/builder/resume/${id}?action=download-pdf`);
+    }, 1200);
+  };
+
+  const handleDownloadWord = () => {
+    showToast('Word download coming soon!');
+  };
+
+  const handleShare = (id: string, type: 'resume' | 'cover-letter') => {
+    setShareTarget({ id, type });
+  };
+
+  // Use real data if available, otherwise show mock data for the demo
+  const displayResumes = resumes.length > 0 ? resumes : (!loadingResumes && !resumeError ? MOCK_RESUMES : []);
+  const displayCoverLetters = coverLetters.length > 0 ? coverLetters : (!loadingCoverLetters ? MOCK_COVER_LETTERS : []);
+
+  const bestAts = displayResumes.length > 0
+    ? Math.max(...displayResumes.filter((r) => r.ats_score != null).map((r) => r.ats_score ?? 0))
+    : 0;
+
+  const stats = [
+    {
+      label: 'Total Resumes',
+      value: displayResumes.length,
+      icon: FileText,
+      iconBg: '#f0fdfa',
+      iconColor: '#4AB7A6',
+    },
+    {
+      label: 'Best ATS Score',
+      value: bestAts > 0 ? `${bestAts}%` : '—',
+      icon: Target,
+      iconBg: '#f0fdf4',
+      iconColor: '#16a34a',
+    },
+    {
+      label: 'Cover Letters',
+      value: displayCoverLetters.length,
+      icon: Mail,
+      iconBg: '#eff6ff',
+      iconColor: '#2563eb',
+    },
+    {
+      label: 'Profile Complete',
+      value: '78%',
+      icon: User,
+      iconBg: '#faf5ff',
+      iconColor: '#7c3aed',
+    },
+  ];
+
+  return (
+    <div className="min-h-full bg-white">
+      {/* Top area */}
+      <div className="border-b border-slate-100 px-6 lg:px-8 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 shrink-0" style={{ color: '#4AB7A6' }} />
+              Good morning, Alex
+            </h1>
+            <p className="text-slate-500 mt-1 text-sm">
+              You have {displayResumes.length} resume{displayResumes.length !== 1 ? 's' : ''}. Keep improving your ATS score!
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              onClick={handleNewResume}
+              disabled={creatingResume}
+              className="rounded-full text-white text-sm font-medium px-5 h-9"
+              style={{ backgroundColor: '#4AB7A6' }}
+            >
+              {creatingResume ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              Build New Resume
+            </Button>
+            <Button
+              onClick={handleNewCoverLetter}
+              disabled={creatingCoverLetter}
+              variant="outline"
+              className="rounded-full text-sm font-medium px-5 h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              {creatingCoverLetter ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              New Cover Letter
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="bg-white border border-slate-200 rounded-xl p-5 flex items-center gap-4 shadow-sm"
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: stat.iconBg }}
+                >
+                  <Icon size={20} style={{ color: stat.iconColor }} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                  <p className="text-xs text-slate-500">{stat.label}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pro Tools Row */}
+        <div className="mt-6 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#4AB7A6' }}>
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <h2 className="font-semibold text-slate-900">Pro Tools</h2>
+              <span className="text-[10px] font-bold bg-[#4AB7A6] text-white px-2 py-0.5 rounded-full">PRO</span>
+            </div>
+            {isPro ? (
+              <span className="text-xs font-semibold text-teal-700 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Active
+              </span>
+            ) : (
+              <Link href="/pricing" className="text-xs text-teal-600 hover:underline font-medium">
+                Upgrade to Pro →
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                icon: FileDown,
+                label: 'Download PDF',
+                desc: 'Print-ready PDF',
+                action: () => {
+                  if (displayResumes[0]) handleDownloadPdf(displayResumes[0].id);
+                  else showToast('Create a resume first to download PDF.');
+                },
+              },
+              {
+                icon: FileText,
+                label: 'Download Word',
+                desc: '.docx format',
+                action: handleDownloadWord,
+              },
+              {
+                icon: Share2,
+                label: 'Share Resume',
+                desc: 'Public link',
+                action: () => {
+                  if (displayResumes[0]) handleShare(displayResumes[0].id, 'resume');
+                  else showToast('Create a resume first to share.');
+                },
+              },
+              {
+                icon: Target,
+                label: 'ATS Check',
+                desc: 'Score your resume',
+                action: () => router.push('/dashboard/ats-checker'),
+              },
+            ].map(({ icon: Icon, label, desc, action }) => (
+              <button
+                key={label}
+                onClick={action}
+                className="bg-white rounded-xl p-4 text-left border border-teal-100 hover:border-teal-400 hover:shadow-md transition-all group"
+              >
+                <Icon className="w-5 h-5 mb-2" style={{ color: '#4AB7A6' }} />
+                <div className="text-sm font-semibold text-slate-900">{label}</div>
+                <div className="text-xs text-slate-400">{desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main content + right sidebar */}
+      <div className="flex gap-6 px-6 lg:px-8 py-8">
+        {/* Main scrollable content */}
+        <div className="flex-1 min-w-0 space-y-10">
+          {/* My Resumes */}
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-semibold text-slate-900">My Resumes</h2>
+              <Button
+                onClick={handleNewResume}
+                disabled={creatingResume}
+                variant="outline"
+                className="rounded-full text-sm font-medium border-slate-200 text-slate-700 hover:bg-slate-50 h-8 px-4"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Create New
+              </Button>
+            </div>
+
+            {loadingResumes ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : resumeError ? (
+              <Card className="border-red-100 shadow-none">
+                <CardContent className="py-10 text-center text-sm text-red-500">{resumeError}</CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {displayResumes.map((resume) => (
+                  <ResumeCard
+                    key={resume.id}
+                    resume={resume}
+                    downloadingId={downloadingId}
+                    onDelete={handleDeleteResume}
+                    onDuplicate={handleDuplicateResume}
+                    onDownloadPdf={handleDownloadPdf}
+                    onDownloadWord={handleDownloadWord}
+                    onShare={(id) => handleShare(id, 'resume')}
+                  />
+                ))}
+                <button
+                  onClick={handleNewResume}
+                  disabled={creatingResume}
+                  className="min-h-[220px] rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-[#4AB7A6] hover:text-[#4AB7A6] transition-colors"
+                >
+                  {creatingResume ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+                  <span className="text-sm font-medium">New Resume</span>
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* My Cover Letters */}
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-semibold text-slate-900">My Cover Letters</h2>
+              <Button
+                onClick={handleNewCoverLetter}
+                disabled={creatingCoverLetter}
+                variant="outline"
+                className="rounded-full text-sm font-medium border-slate-200 text-slate-700 hover:bg-slate-50 h-8 px-4"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Create New
+              </Button>
+            </div>
+
+            {loadingCoverLetters ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {displayCoverLetters.map((cl) => (
+                  <CoverLetterCard
+                    key={cl.id}
+                    coverLetter={cl}
+                    downloadingId={downloadingId}
+                    onDelete={handleDeleteCoverLetter}
+                    onDuplicate={handleDuplicateCoverLetter}
+                    onDownloadPdf={(id) => {
+                      setDownloadingId(id);
+                      showToast('Opening builder to download PDF...');
+                      setTimeout(() => setDownloadingId(null), 1200);
+                    }}
+                    onDownloadWord={handleDownloadWord}
+                    onShare={(id) => handleShare(id, 'cover-letter')}
+                  />
+                ))}
+                <button
+                  onClick={handleNewCoverLetter}
+                  disabled={creatingCoverLetter}
+                  className="min-h-[140px] rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-[#4AB7A6] hover:text-[#4AB7A6] transition-colors"
+                >
+                  {creatingCoverLetter ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+                  <span className="text-sm font-medium">New Cover Letter</span>
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* Quick Actions */}
+          <section>
+            <h2 className="text-xl font-semibold text-slate-900 mb-5">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {QUICK_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-[#4AB7A6] hover:shadow-md transition-all group"
+                  >
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                      style={{ backgroundColor: action.bg }}
+                    >
+                      <Icon size={20} style={{ color: action.color }} />
+                    </div>
+                    <p className="font-semibold text-slate-900 text-sm group-hover:text-[#4AB7A6] transition-colors">
+                      {action.label}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{action.description}</p>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ATS Tips */}
+          <section>
+            <div className="bg-teal-50 border border-teal-200 rounded-2xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#4AB7A6' }}>
+                  <TrendingUp size={18} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900 mb-1">Improve Your ATS Score</h3>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Your average ATS score is 83/100. Here&apos;s how to improve:
+                  </p>
+                  <ul className="space-y-2">
+                    {[
+                      'Add more industry-specific keywords from job descriptions',
+                      'Include measurable achievements in each bullet point',
+                      'Ensure your contact section includes a LinkedIn URL',
+                    ].map((tip) => (
+                      <li key={tip} className="flex items-start gap-2 text-sm text-slate-700">
+                        <CheckCircle2 size={16} className="shrink-0 mt-0.5" style={{ color: '#4AB7A6' }} />
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/dashboard/ats-checker"
+                    className="inline-flex items-center gap-1 mt-4 text-sm font-semibold"
+                    style={{ color: '#4AB7A6' }}
+                  >
+                    Run Full ATS Check →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Quick Actions Sidebar — desktop only (xl+) */}
+        <aside className="hidden xl:block w-60 flex-shrink-0">
+          <div className="sticky top-6">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Quick Actions</p>
+              </div>
+              <div className="p-3 space-y-1">
+                <button
+                  onClick={handleNewResume}
+                  disabled={creatingResume}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-teal-50">
+                    <Plus className="w-4 h-4" style={{ color: '#4AB7A6' }} />
+                  </div>
+                  New Resume
+                </button>
+                <button
+                  onClick={handleNewCoverLetter}
+                  disabled={creatingCoverLetter}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50">
+                    <Mail className="w-4 h-4 text-blue-500" />
+                  </div>
+                  New Cover Letter
+                </button>
+                <Link
+                  href="/dashboard/ats-checker"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-green-50">
+                    <Target className="w-4 h-4 text-green-600" />
+                  </div>
+                  ATS Check
+                </Link>
+                <button
+                  onClick={() => {
+                    if (displayResumes[0]) handleDownloadPdf(displayResumes[0].id);
+                    else showToast('Create a resume first to download.');
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-purple-50">
+                    <Download className="w-4 h-4 text-purple-500" />
+                  </div>
+                  Download
+                </button>
+              </div>
+
+              {/* Upgrade nudge — only for free users */}
+              {!isPro && (
+                <div className="mx-3 mb-3 mt-1 bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sparkles className="w-3.5 h-3.5" style={{ color: '#4AB7A6' }} />
+                    <span className="text-xs font-bold text-slate-900">Go Pro</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug mb-2">Unlock Word downloads, AI tailoring & more.</p>
+                  <Link
+                    href="/pricing"
+                    className="block text-center text-[11px] font-bold text-white rounded-lg py-1.5 transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: '#4AB7A6' }}
+                  >
+                    Upgrade Now
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Share Modal */}
+      {shareTarget && (
+        <ShareModal
+          id={shareTarget.id}
+          type={shareTarget.type}
+          onClose={() => setShareTarget(null)}
+        />
+      )}
+
+      {/* Toast */}
+      {toastMessage && (
+        <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
+      )}
+    </div>
+  );
+}
+
+// ── Resume card ──────────────────────────────────────────────────────────────
+function ResumeCard({
+  resume,
+  downloadingId,
+  onDelete,
+  onDuplicate,
+  onDownloadPdf,
+  onDownloadWord,
+  onShare,
+}: {
+  resume: ResumeRow;
+  downloadingId: string | null;
+  onDelete: (id: string) => void;
+  onDuplicate: (r: ResumeRow) => void;
+  onDownloadPdf: (id: string) => void;
+  onDownloadWord: () => void;
+  onShare: (id: string) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const strength = calcStrength(resume.ats_score);
+  const isDownloading = downloadingId === resume.id;
+
+  // Segmented strength bar: 3 segments
+  const filledSegments = strength >= 85 ? 3 : strength >= 72 ? 2 : 1;
+  const segmentColors = ['#f97316', '#f59e0b', '#16a34a'];
+
+  const meta = TEMPLATE_META[resume.template_id] ?? TEMPLATE_META['classic'];
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      {/* Resume preview thumbnail */}
+      <div className="relative overflow-hidden bg-slate-100" style={{ height: '160px' }}>
+        <div className="absolute inset-0 flex items-stretch justify-stretch p-2">
+          <div
+            className="flex-1 rounded-lg overflow-hidden"
+            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.09), 0 1px 2px rgba(0,0,0,0.06)' }}
+          >
+            <TemplatePreview layout={meta.layout} accent={meta.accent} />
+          </div>
+        </div>
+        {/* Edit overlay */}
+        <Link
+          href={`/builder/resume/${resume.id}`}
+          className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors group/thumb"
+        >
+          <span className="opacity-0 group-hover/thumb:opacity-100 transition-opacity bg-white text-xs font-semibold rounded-full px-4 py-1.5 shadow" style={{ color: '#4AB7A6' }}>
+            Edit Resume
+          </span>
+        </Link>
+      </div>
+
+      {/* Body */}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <p className="font-semibold text-slate-900 text-sm leading-tight truncate">
+            {truncate(resume.title, 32)}
+          </p>
+          <span
+            className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+            style={{
+              color: atsColor(resume.ats_score),
+              backgroundColor: atsBgColor(resume.ats_score),
+            }}
+          >
+            <TrendingUp className="w-3 h-3" />
+            {resume.ats_score != null ? `${resume.ats_score}%` : '—'}
+          </span>
+        </div>
+        <p className="text-xs text-slate-400 mb-3">{formatEdited(resume.updated_at)}</p>
+
+        {resume.ats_score != null && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-slate-500">ATS Score</span>
+              <span className="text-xs font-semibold" style={{ color: atsColor(resume.ats_score) }}>
+                {atsLabel(resume.ats_score)}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${resume.ats_score}%`,
+                  backgroundColor: atsColor(resume.ats_score),
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Resume Strength */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 shrink-0">Strength:</span>
+          <div className="flex gap-0.5 flex-1">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-1.5 flex-1 rounded-full transition-all duration-500"
+                style={{
+                  backgroundColor: i < filledSegments ? segmentColors[i] : '#e2e8f0',
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-slate-600 shrink-0">{strength}%</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
+        <Link href={`/builder/resume/${resume.id}`}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs font-medium rounded-full border-[#4AB7A6] text-[#4AB7A6] hover:bg-teal-50"
+          >
+            <Edit className="w-3.5 h-3.5 mr-1" />
+            Edit
+          </Button>
+        </Link>
+
+        <div className="flex items-center gap-1.5">
+          {/* PDF download */}
+          <button
+            title="Download PDF"
+            onClick={() => onDownloadPdf(resume.id)}
+            disabled={isDownloading}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300 disabled:opacity-60"
+          >
+            {isDownloading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          {/* Word download */}
+          <button
+            title="Download Word (.docx)"
+            onClick={onDownloadWord}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300"
+          >
+            <FileText className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Share */}
+          <button
+            title="Share Resume"
+            onClick={() => onShare(resume.id)}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* More menu */}
+          <div className="relative">
+            <button
+              title="More options"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all border border-slate-200"
+            >
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 bottom-10 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-40 z-10">
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  onClick={() => { onDuplicate(resume); setMenuOpen(false); }}
+                >
+                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  Duplicate
+                </button>
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                  onClick={() => { onDelete(resume.id); setMenuOpen(false); }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Cover letter card ────────────────────────────────────────────────────────
+interface ExtendedCoverLetterRow extends CoverLetterRow {
+  company?: string;
+}
+
+function CoverLetterCard({
+  coverLetter,
+  downloadingId,
+  onDelete,
+  onDuplicate,
+  onDownloadPdf,
+  onDownloadWord,
+  onShare,
+}: {
+  coverLetter: ExtendedCoverLetterRow;
+  downloadingId: string | null;
+  onDelete: (id: string) => void;
+  onDuplicate: (cl: CoverLetterRow) => void;
+  onDownloadPdf: (id: string) => void;
+  onDownloadWord: () => void;
+  onShare: (id: string) => void;
+}) {
+  const isDownloading = downloadingId === coverLetter.id;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      <div className="p-5 flex flex-col gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <Mail size={18} className="text-blue-500" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900 text-sm leading-tight truncate">
+              {truncate(coverLetter.title, 32)}
+            </p>
+            {coverLetter.company && (
+              <p className="text-xs text-slate-500 mt-0.5">{coverLetter.company}</p>
+            )}
+            <p className="text-xs text-slate-400 mt-0.5">{formatEdited(coverLetter.updated_at)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+          <Link href={`/builder/cover-letter/${coverLetter.id}`} className="flex-1">
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs font-medium rounded-full text-white"
+              style={{ backgroundColor: '#4AB7A6' }}
+            >
+              <Edit className="w-3.5 h-3.5 mr-1" />
+              Edit
+            </Button>
+          </Link>
+
+          {/* PDF download */}
+          <button
+            title="Download PDF"
+            onClick={() => onDownloadPdf(coverLetter.id)}
+            disabled={isDownloading}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300 disabled:opacity-60"
+          >
+            {isDownloading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          {/* Word download */}
+          <button
+            title="Download Word (.docx)"
+            onClick={onDownloadWord}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300"
+          >
+            <FileText className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Share */}
+          <button
+            title="Share Cover Letter"
+            onClick={() => onShare(coverLetter.id)}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-teal-50 flex items-center justify-center text-slate-400 hover:text-teal-600 transition-all border border-slate-200 hover:border-teal-300"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Duplicate */}
+          <button
+            title="Duplicate"
+            onClick={() => onDuplicate(coverLetter)}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all border border-slate-200"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Delete */}
+          <button
+            title="Delete"
+            onClick={() => onDelete(coverLetter.id)}
+            className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all border border-slate-200 hover:border-red-200"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
