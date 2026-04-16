@@ -230,6 +230,133 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>Small improvements to your resume compound into dramatically better response rates. A 1-in-50 response rate that becomes 1-in-20 doubles your number of interviews without changing your job search volume at all.</p>
     `,
   },
+  {
+    slug: "ats-friendly-resume-tips",
+    title: "ATS-Friendly Resume: 10 Tips to Get Past the Bots in 2026",
+    description: "Learn how to create an ATS-friendly resume that passes scanning software. 10 expert tips to ensure recruiters actually see your application.",
+    date: "2026-04-16",
+    readTime: "8 min read",
+    category: "ATS Optimization",
+    gradient: "from-teal-500 to-emerald-600",
+    content: `
+<h2>What is an ATS and Why Should You Care?</h2>
+<p>An Applicant Tracking System is software that companies use to manage job applications at scale. When you submit your resume online, it's immediately parsed by this software, which extracts information like your contact details, work experience, skills, and education. The ATS then scores your resume based on keywords and formatting, deciding whether you move forward or get automatically rejected.</p>
+<p>Here's the reality: <strong>most candidates never know why they were rejected</strong>. They're likely not rejected for lacking skills—they're rejected because their resume couldn't be properly parsed by the ATS. According to industry research, <strong>75% of resumes never reach a human recruiter</strong>. The ATS is the gatekeeper, and you need to speak its language.</p>
+
+<h2>10 Tips for Creating an ATS-Friendly Resume</h2>
+
+<h3>1. Use a Simple, Clean Format</h3>
+<p><strong>The Problem:</strong> Fancy formatting looks impressive but destroys ATS readability. Tables, text boxes, graphics, headers that span columns, and unusual fonts confuse the parsing software.</p>
+<p><strong>The Solution:</strong> Use a straightforward, single-column layout with standard fonts like Arial, Calibri, or Times New Roman. Think of your resume as a plain text document, even if you save it as a PDF.</p>
+
+<h3>2. Keyword Optimization is Non-Negotiable</h3>
+<p>The ATS compares your resume to the job description. If you use different words for the same skills, the ATS thinks you don't have them. Mirror the <em>exact</em> language from the job posting — if they ask for "project management experience," don't just mention "managed projects."</p>
+<p>Spend 15 minutes reading the job description and highlighting every technical term, skill, and software mentioned. Ensure these exact terms appear in your resume.</p>
+
+<h3>3. Avoid Fancy Graphics, Icons, and Images</h3>
+<p>That sleek resume with icons next to section headers and a professional headshot? The ATS sees symbols it can't parse and skips right over them. Stick to text-based formatting — no infographics, no charts, no icons, no photos.</p>
+
+<h3>4. Save as PDF (When You Can)</h3>
+<p>PDFs are more stable across systems and preserve formatting better. Save as PDF unless explicitly told otherwise. PDFs render consistently across different computers, preventing parsing problems.</p>
+
+<h3>5. Use Standard Section Headings</h3>
+<p>Creativity in section names confuses ATS software. Use headings the ATS recognizes:</p>
+<ul>
+  <li>PROFESSIONAL EXPERIENCE (not "Career Journey" or "Work History")</li>
+  <li>EDUCATION</li>
+  <li>SKILLS</li>
+  <li>CERTIFICATIONS</li>
+  <li>PROFESSIONAL SUMMARY (not "About Me")</li>
+</ul>
+
+<h3>6. List Skills Clearly in a Dedicated Section</h3>
+<p>Burying your skills throughout the resume in narrative form means the ATS might miss them. Create a dedicated SKILLS section listing your competencies clearly, separated by commas or in bulleted format.</p>
+
+<h3>7. Format Your Dates Consistently</h3>
+<p>Inconsistent date formatting confuses ATS parsing. Pick one format and stick with it throughout your entire resume. Recommended: <strong>Jan 2022 – Present</strong>.</p>
+
+<h3>8. Avoid Tables, Columns, and Text Boxes</h3>
+<p>Even in modern software, ATS parsing of tables is unreliable. Use line breaks and bullet points instead. Your resume should be copyable into plain text and still be readable.</p>
+
+<h3>9. Include Contact Information at the Top</h3>
+<p>Put your full contact information at the very top of your resume: full name, city/state, phone, professional email, and LinkedIn URL. Many ATS systems can't read text placed in Word headers or footers.</p>
+
+<h3>10. Proofread Ruthlessly for Typos and Formatting</h3>
+<p>Typos don't just hurt your credibility with humans — they can cause ATS parsing errors. A misspelled word might break how the software reads an entire section. Read your resume out loud, and paste it into a plain text editor to catch formatting issues.</p>
+
+<h2>Quick Checklist Before You Apply</h2>
+<ul>
+  <li>✅ Single-column or simple two-column layout</li>
+  <li>✅ Keywords match the exact language of the job posting</li>
+  <li>✅ Standard section headings (Work Experience, Education, Skills)</li>
+  <li>✅ No tables, text boxes, or images</li>
+  <li>✅ Contact info in the body, not in headers/footers</li>
+  <li>✅ Submitted as PDF or .docx (not an image)</li>
+  <li>✅ Acronyms spelled out at least once</li>
+</ul>
+<p>Getting past the ATS is the first gate. Once you're through, a polished, achievement-focused resume does the rest of the work.</p>
+<p>Use our <a href="/ats-checker">free ATS Checker</a> to score your resume before you apply.</p>
+    `,
+  },
+  {
+    slug: "best-resume-format-2026",
+    title: "The Best Resume Format in 2026: Which One Gets You Hired?",
+    description: "Compare chronological, functional, and combination resume formats in 2026. Learn which format works best for your situation and how AI tools help you choose.",
+    date: "2026-04-16",
+    readTime: "7 min read",
+    category: "Resume Tips",
+    gradient: "from-blue-500 to-indigo-600",
+    content: `
+<h2>The Three Main Resume Formats Explained</h2>
+
+<h3>Format #1: Chronological Resume</h3>
+<p>Your work history listed in reverse chronological order (most recent job first), with accomplishments and responsibilities under each position. <strong>This is the standard.</strong> Most hiring managers expect this format, and most ATS systems are optimized to parse it.</p>
+<p><strong>Best for:</strong> Candidates with a clear progression of jobs in the same field, stable employment with minimal gaps, and career advancement within an industry.</p>
+<p><strong>Challenges:</strong> Doesn't hide employment gaps, and may bury relevant skills if you change jobs frequently.</p>
+
+<h3>Format #2: Functional Resume</h3>
+<p>Your skills and competencies listed prominently, with work history playing a supporting role. The focus is on what you can do, not where you did it.</p>
+<p><strong>Best for:</strong> Career changers, people with employment gaps, or those with unrelated job history who want to highlight transferable skills.</p>
+<p><strong>Real talk:</strong> Many hiring managers are skeptical of functional resumes because they've been used to hide red flags. Unless you have a strong reason, chronological is safer in 2026.</p>
+
+<h3>Format #3: Combination Resume (Hybrid)</h3>
+<p>The best of both worlds. You lead with your relevant skills, then provide a reverse-chronological work history with accomplishments. <strong>This is the format gaining ground in 2026.</strong></p>
+<p><strong>Best for:</strong> Most job seekers — career changers with transferable skills, senior candidates with diverse experience, and anyone targeting a specific competency set.</p>
+<p><strong>Why it's winning in 2026:</strong> Companies want assurance. The combination format says "here's what I'm good at, and here's where I earned that expertise."</p>
+
+<h2>Choosing Your Format: A Decision Framework</h2>
+
+<p><strong>Use Chronological if:</strong> You're staying in the same field with steady job progression, no significant gaps, and your recent jobs are directly relevant.</p>
+<p><strong>Use Combination if:</strong> You're changing roles within your industry, want to emphasize specific competencies the job posting mentions, or have a mix of relevant and less-relevant experience.</p>
+<p><strong>Use Functional only if:</strong> You're making a significant career change and most of your experience is in a different field.</p>
+
+<h2>Resume Format by Industry in 2026</h2>
+<ul>
+  <li><strong>Tech/Software:</strong> Combination or chronological. Emphasize technical skills prominently.</li>
+  <li><strong>Sales/Business Dev:</strong> Chronological. Hiring managers want to see your progression.</li>
+  <li><strong>Creative (Design, Marketing):</strong> Combination with a portfolio.</li>
+  <li><strong>Healthcare:</strong> Chronological. Credentials and licensure history expected.</li>
+  <li><strong>Executive/C-Level:</strong> Chronological. Clear progression to leadership is essential.</li>
+</ul>
+
+<h2>The Format Trend in 2026</h2>
+<p>Here's what we're seeing across the job market:</p>
+<ul>
+  <li><strong>Chronological is still dominant</strong> — about 60% of resumes follow this format.</li>
+  <li><strong>Combination is on the rise</strong> — up from ~15% three years ago to ~30% now.</li>
+  <li><strong>Functional is declining</strong> — only about 10% of submissions now, and trending lower.</li>
+</ul>
+<p>The trend is clear: <strong>hiring managers want to know both what you can do AND where you proved it.</strong> The combination format delivers both.</p>
+
+<h2>Quick Reference: Format Comparison</h2>
+<ul>
+  <li>✅ <strong>Chronological</strong> — ATS excellent, most trusted, best for stable career paths</li>
+  <li>✅ <strong>Combination</strong> — ATS excellent, growing preference, best for career changers</li>
+  <li>⚠️ <strong>Functional</strong> — ATS fair, declining preference, use only for major pivots</li>
+</ul>
+<p>Use our <a href="/builder/resume/new">AI-powered builder</a> to build your resume in the format that matches your background — and get it ATS-ready in minutes.</p>
+    `,
+  },
 ];
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
