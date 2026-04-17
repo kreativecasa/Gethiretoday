@@ -426,7 +426,10 @@ export default function DashboardPage() {
     }, 1200);
   };
 
-  const handleDownloadWord = async (id?: string) => {
+  // Accept either a string id or an onClick event — discriminate by type so
+  // this can be used directly as both an action callback and an onClick handler.
+  const handleDownloadWord = async (arg?: string | React.MouseEvent) => {
+    const id = typeof arg === 'string' ? arg : undefined;
     const targetId = id || displayResumes[0]?.id;
     if (!targetId) {
       showToast('Create a resume first to download Word.');
