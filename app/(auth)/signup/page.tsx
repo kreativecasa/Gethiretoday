@@ -187,6 +187,9 @@ function SignupForm() {
     }
 
     setSuccess(true);
+    try {
+      sessionStorage.setItem('dashboard_toast', 'Account created! Welcome to GetHireToday.');
+    } catch {}
     setTimeout(() => {
       router.push('/dashboard');
     }, 1500);

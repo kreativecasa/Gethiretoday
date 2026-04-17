@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Sparkles, Menu, X, LayoutDashboard } from "lucide-react";
+import { createClient } from "@/lib/supabase";
 
 const navLinks = [
   { label: "Resume Builder", href: "/builder/resume" },
@@ -17,12 +18,27 @@ const navLinks = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [authLoaded, setAuthLoaded] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Detect login state so logged-in users see "Dashboard" instead of "Log In".
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAuthed(!!user);
+      setAuthLoaded(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthed(!!session?.user);
+    });
+    return () => { sub.subscription.unsubscribe(); };
   }, []);
 
   // Close mobile menu on route change
@@ -87,19 +103,34 @@ export default function Navbar() {
 
           {/* Desktop right actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:underline transition-all"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/builder/resume"
-              className="px-5 py-2 text-sm font-semibold text-white rounded-full transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#4AB7A6" }}
-            >
-              Build Free Resume
-            </Link>
+            {!authLoaded ? (
+              <div className="w-[200px] h-9" />
+            ) : isAuthed ? (
+              <Link
+                href="/dashboard"
+                className="px-5 py-2 text-sm font-semibold text-white rounded-full transition-opacity hover:opacity-90 flex items-center gap-2"
+                style={{ backgroundColor: "#4AB7A6" }}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:underline transition-all"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/builder/resume"
+                  className="px-5 py-2 text-sm font-semibold text-white rounded-full transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#4AB7A6" }}
+                >
+                  Build Free Resume
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -140,21 +171,34 @@ export default function Navbar() {
             })}
 
             <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 text-sm font-medium text-center text-slate-700 border border-slate-300 rounded-full hover:border-slate-400 hover:bg-slate-50 transition-colors"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/builder/resume"
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 text-sm font-semibold text-center text-white rounded-full transition-opacity hover:opacity-90"
-                style={{ backgroundColor: "#4AB7A6" }}
-              >
-                Build Free Resume
-              </Link>
+              {isAuthed ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-4 py-3 text-sm font-semibold text-center text-white rounded-full transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#4AB7A6" }}
+                >
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-3 text-sm font-medium text-center text-slate-700 border border-slate-300 rounded-full hover:border-slate-400 hover:bg-slate-50 transition-colors"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/builder/resume"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-3 text-sm font-semibold text-center text-white rounded-full transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: "#4AB7A6" }}
+                  >
+                    Build Free Resume
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
