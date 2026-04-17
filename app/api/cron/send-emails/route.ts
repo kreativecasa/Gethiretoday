@@ -81,10 +81,13 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Fetch due pending emails
+  // Note: 'welcome' is skipped here because it's sent directly from the auth
+  // callback (/api/email/welcome) at signup time, so queuing it would duplicate.
   const { data: queue, error: fetchErr } = await supabase
     .from('email_queue')
     .select('id, user_id, email_type, attempts')
     .eq('status', 'pending')
+    .neq('email_type', 'welcome')
     .lte('scheduled_at', new Date().toISOString())
     .lt('attempts', MAX_ATTEMPTS)
     .limit(BATCH_SIZE);
