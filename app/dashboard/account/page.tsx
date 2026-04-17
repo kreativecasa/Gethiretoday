@@ -48,26 +48,40 @@ export default function AccountPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock subscription status
-  const isPro = false;
+  // Real subscription status from the profiles table (was hardcoded to false).
+  const [isPro, setIsPro] = useState(false);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: { fullName: '', email: '' },
   });
 
-  // Load real user data on mount
+  // Load real user + subscription status on mount
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status, full_name, avatar_url')
+        .eq('id', user.id)
+        .single();
       profileForm.reset({
-        fullName: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+        fullName:
+          profile?.full_name ??
+          user.user_metadata?.full_name ??
+          user.user_metadata?.name ??
+          '',
         email: user.email ?? '',
       });
-      if (user.user_metadata?.avatar_url) {
-        setAvatarUrl(user.user_metadata.avatar_url);
+      if (profile?.avatar_url || user.user_metadata?.avatar_url) {
+        setAvatarUrl(profile?.avatar_url ?? user.user_metadata?.avatar_url);
       }
+      setIsPro(
+        profile?.subscription_status === 'active' ||
+        profile?.subscription_status === 'trialing' ||
+        profile?.subscription_status === 'pro'
+      );
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
