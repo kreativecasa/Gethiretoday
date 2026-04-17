@@ -139,6 +139,26 @@ const QUICK_ACTIONS = [
 function ShareModal({ id, type, onClose }: { id: string; type: 'resume' | 'cover-letter'; onClose: () => void }) {
   const link = `https://gethiretoday.com/${type === 'resume' ? 'resume' : 'cover-letter'}/public/${id}`;
   const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<'enabling' | 'ready' | 'error'>('enabling');
+
+  // Flip is_public=true when the dialog opens so the link actually works.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/${type === 'resume' ? 'resume' : 'cover-letter'}/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_public: true }),
+        });
+        if (cancelled) return;
+        setStatus(res.ok ? 'ready' : 'error');
+      } catch {
+        if (!cancelled) setStatus('error');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, type]);
 
   const handleCopy = async () => {
     try {
@@ -162,7 +182,17 @@ function ShareModal({ id, type, onClose }: { id: string; type: 'resume' | 'cover
             <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-sm text-slate-500 mb-3">Anyone with this link can view your {type === 'resume' ? 'resume' : 'cover letter'}.</p>
+        {status === 'enabling' && (
+          <p className="text-sm text-slate-500 mb-3 flex items-center gap-2">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Enabling public link…
+          </p>
+        )}
+        {status === 'ready' && (
+          <p className="text-sm text-slate-500 mb-3">Anyone with this link can view your {type === 'resume' ? 'resume' : 'cover letter'}.</p>
+        )}
+        {status === 'error' && (
+          <p className="text-sm text-red-500 mb-3">Could not enable the public link. Please try again.</p>
+        )}
         <div className="flex gap-2">
           <input
             readOnly
@@ -171,7 +201,8 @@ function ShareModal({ id, type, onClose }: { id: string; type: 'resume' | 'cover
           />
           <button
             onClick={handleCopy}
-            className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg text-white transition-colors"
+            disabled={status !== 'ready'}
+            className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg text-white transition-colors disabled:opacity-50"
             style={{ backgroundColor: '#4AB7A6' }}
           >
             {copied ? 'Copied!' : 'Copy'}
@@ -200,6 +231,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [isPro, setIsPro] = useState(false);
+  const [firstName, setFirstName] = useState<string>('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -207,7 +239,7 @@ export default function DashboardPage() {
       if (!user) return;
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, full_name, email')
         .eq('id', user.id)
         .single();
       setIsPro(
@@ -215,8 +247,17 @@ export default function DashboardPage() {
         profile?.subscription_status === 'trialing' ||
         profile?.subscription_status === 'pro'
       );
+      const name = profile?.full_name?.trim().split(/\s+/)[0] || profile?.email?.split('@')[0] || 'there';
+      setFirstName(name);
     });
   }, []);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  })();
 
   const [resumes, setResumes] = useState<ResumeRow[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
@@ -230,6 +271,17 @@ export default function DashboardPage() {
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Pick up any cross-page toast (e.g. "Login successful!" set by /login).
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem('dashboard_toast');
+      if (pending) {
+        setToastMessage(pending);
+        sessionStorage.removeItem('dashboard_toast');
+      }
+    } catch {}
+  }, []);
   const [shareTarget, setShareTarget] = useState<{ id: string; type: 'resume' | 'cover-letter' } | null>(null);
 
   const showToast = (msg: string) => setToastMessage(msg);
@@ -374,17 +426,51 @@ export default function DashboardPage() {
     }, 1200);
   };
 
-  const handleDownloadWord = () => {
-    showToast('Word download coming soon!');
+  const handleDownloadWord = async (id?: string) => {
+    const targetId = id || displayResumes[0]?.id;
+    if (!targetId) {
+      showToast('Create a resume first to download Word.');
+      return;
+    }
+    if (!isPro) {
+      showToast('Word download is a Pro feature. Upgrade to unlock.');
+      return;
+    }
+    setDownloadingId(targetId);
+    try {
+      const res = await fetch(`/api/resume/${targetId}/word`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Word download failed.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      a.download = match ? match[1] : 'resume.doc';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Word download started.');
+    } catch {
+      showToast('Word download failed. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const handleShare = (id: string, type: 'resume' | 'cover-letter') => {
     setShareTarget({ id, type });
   };
 
-  // Use real data if available, otherwise show mock data for the demo
-  const displayResumes = resumes.length > 0 ? resumes : (!loadingResumes && !resumeError ? MOCK_RESUMES : []);
-  const displayCoverLetters = coverLetters.length > 0 ? coverLetters : (!loadingCoverLetters ? MOCK_COVER_LETTERS : []);
+  // Always show real data from the API (no mock fallback — a new user should
+  // see the proper empty state, not fake "Software Engineer Resume" cards).
+  const displayResumes = resumes;
+  const displayCoverLetters = coverLetters;
 
   const bestAts = displayResumes.length > 0
     ? Math.max(...displayResumes.filter((r) => r.ats_score != null).map((r) => r.ats_score ?? 0))
@@ -429,7 +515,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
               <Sparkles className="w-6 h-6 shrink-0" style={{ color: '#4AB7A6' }} />
-              Good morning, Alex
+              {greeting}{firstName ? `, ${firstName}` : ''}
             </h1>
             <p className="text-slate-500 mt-1 text-sm">
               You have {displayResumes.length} resume{displayResumes.length !== 1 ? 's' : ''}. Keep improving your ATS score!

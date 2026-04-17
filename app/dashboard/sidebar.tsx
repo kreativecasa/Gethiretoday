@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -12,9 +11,10 @@ import {
   BookOpen,
   Settings,
   CreditCard,
-  LogOut,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
+
+// User info + logout intentionally live ONLY in the header dropdown
+// to avoid duplicate profile/logout controls. Do not re-add them here.
 
 const navSections = [
   {
@@ -44,41 +44,6 @@ const navSections = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [isPro, setIsPro] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      setUserName(
-        user.user_metadata?.full_name ??
-        user.user_metadata?.name ??
-        user.email?.split('@')[0] ??
-        'User'
-      );
-      setUserEmail(user.email ?? '');
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_status')
-        .eq('id', user.id)
-        .single();
-      setIsPro(profile?.subscription_status === 'active');
-    });
-  }, []);
-
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/');
-    router.refresh();
-  };
-
-  const initials = userName
-    ? userName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
-    : '?';
 
   return (
     <aside className="w-[260px] shrink-0 flex flex-col bg-white border-r border-slate-100 h-full overflow-y-auto">
@@ -92,36 +57,8 @@ export default function DashboardSidebar() {
         </span>
       </Link>
 
-      {/* User info */}
-      <div className="px-4 py-4 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-            style={{ backgroundColor: '#4AB7A6' }}
-          >
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-slate-900 truncate">{userName || '…'}</p>
-              <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                  isPro
-                    ? 'text-white'
-                    : 'bg-slate-100 text-slate-500'
-                }`}
-                style={isPro ? { backgroundColor: '#4AB7A6' } : {}}
-              >
-                {isPro ? 'Pro' : 'Free'}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 truncate">{userEmail}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 space-y-6">
+      <nav className="flex-1 py-6 px-3 space-y-6">
         {navSections.map((section) => (
           <div key={section.label}>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-1.5">
@@ -129,7 +66,7 @@ export default function DashboardSidebar() {
             </p>
             <div className="space-y-0.5">
               {section.items.map(({ href, label, icon: Icon, exact }) => {
-                const isActive = exact ? pathname === href : pathname.startsWith(href);
+                const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(href + '/');
                 return (
                   <Link
                     key={href}
@@ -150,17 +87,6 @@ export default function DashboardSidebar() {
           </div>
         ))}
       </nav>
-
-      {/* Logout */}
-      <div className="px-3 pb-5 border-t border-slate-100 pt-3">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <LogOut size={18} className="shrink-0" />
-          Logout
-        </button>
-      </div>
     </aside>
   );
 }

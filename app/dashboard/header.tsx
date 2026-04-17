@@ -46,10 +46,17 @@ export default function DashboardHeader() {
       setUserEmail(user.email ?? '');
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, full_name')
         .eq('id', user.id)
         .single();
-      setIsPro(profile?.subscription_status === 'active');
+      if (profile?.full_name) {
+        setUserName(profile.full_name);
+      }
+      setIsPro(
+        profile?.subscription_status === 'active' ||
+        profile?.subscription_status === 'trialing' ||
+        profile?.subscription_status === 'pro'
+      );
     });
   }, []);
 
@@ -66,9 +73,14 @@ export default function DashboardHeader() {
 
   const handleLogout = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/');
-    router.refresh();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error('[logout] signOut failed:', e);
+    }
+    // Hard redirect to the homepage so any in-memory auth state is cleared
+    // and the user lands on the public marketing page (per UX expectation).
+    window.location.assign('/');
   };
 
   const handleNewResume = async () => {

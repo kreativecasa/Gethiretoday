@@ -67,6 +67,11 @@ export default function LoginPage() {
       return;
     }
 
+    // Stash a success toast the dashboard will pick up on first render.
+    try {
+      sessionStorage.setItem('dashboard_toast', 'Login successful. Welcome back!');
+    } catch {}
+
     router.push('/dashboard');
     router.refresh();
   };
