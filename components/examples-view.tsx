@@ -26,6 +26,8 @@ import {
   Crown,
 } from "lucide-react";
 import { TemplatePreview, type TemplateLayout } from "@/components/template-preview";
+import { RESUME_EXAMPLES } from "@/lib/resume-examples-data";
+import { exampleToPreviewContent } from "@/lib/example-to-resume";
 
 type Industry = "All" | "Technology" | "Healthcare" | "Education" | "Marketing" | "Finance" | "Design" | "Sales" | "Operations";
 type ExperienceLevel = "All" | "Entry Level" | "Mid Level" | "Senior" | "Executive";
@@ -154,6 +156,11 @@ export default function ExamplesView() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filtered.map((ex) => {
                 const Icon = ex.Icon;
+                // Look up the richer example data (summary, experience, etc.) so the
+                // thumbnail renders the actual role, company, and skills instead of
+                // generic placeholder bars.
+                const richEx = RESUME_EXAMPLES.find((r) => r.slug === ex.slug);
+                const content = richEx ? exampleToPreviewContent(richEx) : { title: ex.title, skills: ex.skills };
                 return (
                   <div key={ex.slug}
                     className="group bg-white rounded-2xl border border-slate-200 hover:border-[#4AB7A6] hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden"
@@ -163,7 +170,7 @@ export default function ExamplesView() {
                     <div className="relative overflow-hidden bg-slate-100" style={{ height: '200px' }}>
                       <div className="absolute inset-0 flex items-stretch justify-stretch p-2">
                         <div className="flex-1 rounded-lg overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.08)' }}>
-                          <TemplatePreview layout={ex.layout} accent={ex.accentColor} />
+                          <TemplatePreview layout={ex.layout} accent={ex.accentColor} content={content} />
                         </div>
                       </div>
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">

@@ -7,8 +7,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { truncate } from '@/lib/utils';
-import { TemplatePreview } from '@/components/template-preview';
+import { TemplatePreview, previewFromResumeData } from '@/components/template-preview';
 import type { TemplateLayout } from '@/components/template-preview';
+import type { ResumeData } from '@/types';
 
 const TEMPLATE_META: Record<string, { layout: TemplateLayout; accent: string }> = {
   classic:   { layout: 'classic',   accent: '#4AB7A6' },
@@ -25,6 +26,7 @@ interface ResumeRow {
   updated_at: string;
   ats_score: number | null;
   template_id: string;
+  data?: ResumeData;
 }
 
 function formatEdited(dateStr: string): string {
@@ -163,7 +165,11 @@ export default function ResumesPage() {
               <Card key={r.id} className="border-0 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <div className="aspect-[8.5/11] w-full border-b border-slate-100 overflow-hidden bg-slate-50">
                   <Link href={`/builder/resume/${r.id}`} className="block h-full">
-                    <TemplatePreview layout={meta.layout} accent={meta.accent} />
+                    <TemplatePreview
+                      layout={meta.layout}
+                      accent={meta.accent}
+                      content={previewFromResumeData(r.data)}
+                    />
                   </Link>
                 </div>
                 <CardContent className="p-4 flex flex-col gap-3">

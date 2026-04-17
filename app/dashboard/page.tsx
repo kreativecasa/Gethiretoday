@@ -27,7 +27,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { truncate } from '@/lib/utils';
-import { TemplatePreview } from '@/components/template-preview';
+import { TemplatePreview, previewFromResumeData } from '@/components/template-preview';
 import type { TemplateLayout } from '@/components/template-preview';
 import { createClient } from '@/lib/supabase';
 
@@ -46,6 +46,7 @@ interface ResumeRow {
   updated_at: string;
   ats_score: number | null;
   template_id: string;
+  data?: import('@/types').ResumeData;
 }
 
 interface CoverLetterRow {
@@ -931,7 +932,7 @@ function ResumeCard({
             className="flex-1 rounded-lg overflow-hidden"
             style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.09), 0 1px 2px rgba(0,0,0,0.06)' }}
           >
-            <TemplatePreview layout={meta.layout} accent={meta.accent} />
+            <TemplatePreview layout={meta.layout} accent={meta.accent} content={previewFromResumeData(resume.data)} />
           </div>
         </div>
         {/* Edit overlay */}

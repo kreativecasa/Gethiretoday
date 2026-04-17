@@ -163,9 +163,9 @@ export default async function ExamplePage({ params }: Props) {
             <p className="text-white/80 mb-8">
               Use our AI-powered builder. Free to start — takes under 10 minutes.
             </p>
-            <Link href="/builder/resume/new"
+            <Link href={`/builder/resume/new?example=${ex.slug}`}
               className="inline-flex items-center gap-2 bg-white text-teal font-semibold rounded-full px-8 py-3 hover:bg-gray-50 transition-colors">
-              Start Building Free <ArrowRight className="w-4 h-4" />
+              Use This Example & Edit <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </section>

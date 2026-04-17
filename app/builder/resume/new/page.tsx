@@ -200,9 +200,38 @@ function ResumeEditorInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const template = searchParams.get("template") || "classic";
+  const exampleSlug = searchParams.get("example");
 
-  const [resume, setResume] = useState<ResumeData>(DEFAULT_RESUME);
-  const [title, setTitle] = useState("My Resume");
+  // Pre-fill from the example when ?example=slug is passed.
+  const initialResume: ResumeData = (() => {
+    if (!exampleSlug) return DEFAULT_RESUME;
+    try {
+      // Dynamic require keeps this out of the initial server bundle;
+      // these modules are client-safe (pure data + pure fns).
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { RESUME_EXAMPLES } = require("@/lib/resume-examples-data") as typeof import("@/lib/resume-examples-data");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { exampleToResumeData } = require("@/lib/example-to-resume") as typeof import("@/lib/example-to-resume");
+      const found = RESUME_EXAMPLES.find((e) => e.slug === exampleSlug);
+      if (found) return exampleToResumeData(found);
+    } catch {}
+    return DEFAULT_RESUME;
+  })();
+
+  const initialTitle = (() => {
+    if (!exampleSlug) return "My Resume";
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { RESUME_EXAMPLES } = require("@/lib/resume-examples-data") as typeof import("@/lib/resume-examples-data");
+      const found = RESUME_EXAMPLES.find((e) => e.slug === exampleSlug);
+      return found ? `${found.title} Resume` : "My Resume";
+    } catch {
+      return "My Resume";
+    }
+  })();
+
+  const [resume, setResume] = useState<ResumeData>(initialResume);
+  const [title, setTitle] = useState(initialTitle);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
