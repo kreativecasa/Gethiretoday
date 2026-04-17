@@ -67,7 +67,7 @@ export function welcomeEmail(firstName: string): { subject: string; html: string
       ${btn("Build My Resume — Free →", `${brand.url}/builder/resume`)}
       ${divider()}
       ${p("Questions? Just reply to this email — I read every one.")}
-      <p style="margin:0;font-size:15px;color:#475569;">— Fahad, Founder of ${brand.name}</p>
+      <p style="margin:0;font-size:15px;color:#475569;">— Haroon, Founder of ${brand.name}</p>
     `),
   };
 }
@@ -90,7 +90,7 @@ export function atsEducationEmail(firstName: string): { subject: string; html: s
       ${btn("Check My ATS Score Free →", `${brand.url}/ats-checker`)}
       ${divider()}
       ${p("See you tomorrow with more tips.")}
-      <p style="margin:0;font-size:15px;color:#475569;">— Fahad</p>
+      <p style="margin:0;font-size:15px;color:#475569;">— Haroon</p>
     `),
   };
 }
@@ -134,10 +134,57 @@ export function upgradeOfferEmail(firstName: string): { subject: string; html: s
         <li><strong>All 60+ templates</strong> — including executive and creative designs</li>
         <li><strong>Full ATS checker</strong> — 30-point analysis with actionable fixes</li>
       </ul>
-      ${btn("Upgrade to Pro →", `${brand.url}/pricing`)}
+      ${btn("Upgrade to Pro — $2/mo →", `${brand.url}/pricing`)}
       ${divider()}
-      ${p("14-day money-back guarantee. Cancel anytime.")}
-      <p style="margin:0;font-size:15px;color:#475569;">— Fahad</p>
+      ${p("Cancel anytime. No questions.")}
+      <p style="margin:0;font-size:15px;color:#475569;">— Haroon</p>
+    `),
+  };
+}
+
+// ─── Email 5: Day 10 — Last chance (value-based nudge) ────────────────────
+export function day10LastChanceEmail(firstName: string): { subject: string; html: string } {
+  return {
+    subject: "Your resume is built. The interviews aren't coming yet.",
+    html: base(`
+      ${h1(`${firstName || 'Hey'} — 10 days in. Time for real talk.`)}
+      ${p("You built a resume on the free plan. Nicely done. But I can see you haven't upgraded yet, and I want to be straight with you about what that's probably costing you.")}
+      ${p("The free plan gives you 3 AI suggestions total. If you're actively job hunting, that runs out in one application. After that, you're applying with a static resume against jobs that each want different keywords — and getting filtered out before a human reads them.")}
+      ${p("Pro fixes that. Unlimited AI rewrites, unlimited ATS checks, clean downloads — for less than the cost of a coffee.")}
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;"><tr><td style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:8px;">Pro pricing</div>
+        <div style="font-size:36px;font-weight:800;color:${brand.color};line-height:1;margin-bottom:4px;">$2<span style="font-size:18px;color:#94a3b8;font-weight:500;">/month</span></div>
+        <div style="font-size:13px;color:#475569;margin-top:12px;">Less than a tenth of what Zety ($23.70) or Resume.io ($24.95) charge.</div>
+      </td></tr></table>
+      ${btn("Upgrade to Pro →", `${brand.url}/pricing`)}
+      ${p("If $2 is still the blocker — and honestly, if it is, the job market is probably what's squeezing you, which is exactly why I made this affordable — hit reply and tell me. I read every email.")}
+      <p style="margin:0;font-size:15px;color:#475569;">— Haroon</p>
+    `),
+  };
+}
+
+// ─── Email 6: Day 14 — Win-back ───────────────────────────────────────────
+export function day14WinbackEmail(firstName: string): { subject: string; html: string } {
+  return {
+    subject: "Before you go — one quick ask",
+    html: base(`
+      ${h1(`${firstName || 'Hey'} — before you go`)}
+      ${p("You've been with us for two weeks, and it looks like GetHireToday didn't quite click for you. That's okay — not every tool is right for every person. Before I stop emailing you, I'd love to know one thing.")}
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;"><tr><td style="background:#fffbeb;border-left:4px solid #f59e0b;padding:20px;border-radius:4px;">
+        <div style="font-size:17px;font-weight:700;color:#0f172a;line-height:1.5;">What stopped you from upgrading?</div>
+        <div style="font-size:14px;color:#94a3b8;margin-top:8px;line-height:1.6;">Hit reply with one sentence. Just the honest answer.</div>
+      </td></tr></table>
+      ${p(`It helps me more than you'd think. A one-liner like <em>"too expensive,"</em> <em>"I already found a job,"</em> <em>"the ATS checker didn't work the way I expected,"</em> or <em>"I forgot about it"</em> — whatever it is — tells me exactly what to fix.`)}
+      ${p("And if you've since landed a job: <strong>congratulations.</strong> That's the whole point. I'd still love to hear what helped, so I can make it better for the next person.")}
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;"><tr><td style="background:#f8fafc;border-radius:12px;padding:20px;">
+        <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:8px;">In case it helps:</div>
+        <div style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:12px;">Pro is $2/mo. Less than a coffee. No autorenew trap — cancel any time, no questions. If $2 is the wall, hit reply instead and tell me why.</div>
+        <a href="${brand.url}/pricing" style="display:inline-block;background:${brand.color};color:#ffffff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:50px;text-decoration:none;">Upgrade to Pro →</a>
+      </td></tr></table>
+      ${p("After this email, I'll stop bugging you unless you come back. Your account stays — the free tier is yours forever. Thanks for giving it a try. Really.")}
+      <p style="margin:0;font-size:15px;color:#475569;">— Haroon</p>
+      ${divider()}
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#94a3b8;font-style:italic;">P.S. If you did land a job — I'd love a one-sentence story for our reader wins page. Total opt-in. But those stories are the whole reason I built this.</p>
     `),
   };
 }

@@ -357,6 +357,247 @@ export const BLOG_POSTS: BlogPost[] = [
 <p>Use our <a href="/builder/resume/new">AI-powered builder</a> to build your resume in the format that matches your background — and get it ATS-ready in minutes.</p>
     `,
   },
+  {
+    slug: "how-to-write-a-cover-letter",
+    title: "How to Write a Cover Letter That Actually Gets You Interviews (2026 Guide)",
+    description: "A no-fluff 2026 guide to writing cover letters that get read. The three-paragraph structure recruiters actually want, plus templates and examples.",
+    date: "2026-04-17",
+    readTime: "9 min read",
+    category: "Cover Letters",
+    gradient: "from-amber-500 to-orange-500",
+    content: `
+<p>Most cover letters get three things wrong: they repeat the resume, they open with "I am writing to apply for," and they run too long. Recruiters spend under 30 seconds on a cover letter. If you haven't earned their attention by line three, you've lost it.</p>
+<p>This guide fixes that. You'll learn the three-paragraph structure that works, see a real example you can steal, and know exactly when to skip the cover letter entirely (yes — sometimes that's the right move).</p>
+
+<h2>Do You Even Need a Cover Letter in 2026?</h2>
+<p>Short answer: sometimes. Here's when each applies.</p>
+
+<h3>Skip the cover letter when:</h3>
+<ul>
+  <li>The application form doesn't ask for one and you're applying to a big company (FAANG, major banks, Fortune 500). Recruiters there rarely read them.</li>
+  <li>You're applying through a job board with 500+ competing applicants. A weak cover letter is worse than none.</li>
+  <li>The role is heavily technical and your GitHub, portfolio, or resume speaks louder than prose.</li>
+</ul>
+
+<h3>Write a cover letter when:</h3>
+<ul>
+  <li>The application form asks for one (even if it says "optional" — treat that as required).</li>
+  <li>You're applying to a startup, nonprofit, government, or academic role — all of which still read them.</li>
+  <li>You're a career switcher and your resume doesn't obviously fit. The cover letter explains the connection.</li>
+  <li>There's a specific reason you want this specific company. That reason deserves 200 words.</li>
+  <li>The role has under 50 applicants and the hiring manager is likely to read each one.</li>
+</ul>
+
+<h2>The Only Cover Letter Structure You Need</h2>
+<p>Forget the five-paragraph essay you were taught in school. Recruiters want three paragraphs, roughly 250–350 words total.</p>
+
+<h3>Paragraph 1: Hook (2–3 sentences)</h3>
+<p>Open with one specific, concrete sentence about why you want this role at this company. Not "I am writing to express my interest in the Marketing Manager position" — that's the default opener every recruiter sees 200 times a week. Start somewhere the reader wouldn't expect.</p>
+<p><strong>Weak:</strong> "I am writing to express my interest in the Marketing Manager position at Acme Corp."</p>
+<p><strong>Strong:</strong> "When Acme launched the rewards program rebuild last quarter, the post-mortem your VP of Marketing shared on LinkedIn was the first time I'd seen a growth team publicly admit what didn't work. That kind of thinking is why I'm applying."</p>
+<p>The second version proves you did research, mentions something specific and recent, and opens with a thought — not a formality.</p>
+
+<h3>Paragraph 2: Proof (4–6 sentences)</h3>
+<p>Pick two or three accomplishments from your resume and expand them with context the resume couldn't hold. This is NOT a resume repeat — it's the story behind the bullets.</p>
+<p>The formula: <em>[situation] → [what you did] → [measurable outcome] → [why it matters for this role].</em></p>
+<p><strong>Example:</strong></p>
+<p>"At my previous role, our email open rates had flatlined at 14% for over a year. I rebuilt the segmentation model using purchase behavior instead of demographics, ran a four-week A/B test against the existing approach, and pushed open rates to 31% while growing revenue per send by 47%. I'd bring that same diagnostic approach to Acme's lifecycle marketing, especially given what I've read about the upcoming loyalty program expansion."</p>
+<p>Notice how it ties back to the company at the end. That's the part 90% of cover letters skip.</p>
+
+<h3>Paragraph 3: Close (2–3 sentences)</h3>
+<p>End with a confident, specific call to action. Don't beg. Don't grovel. Don't use "Thank you for your consideration" as your entire closing — it reads like filler.</p>
+<p><strong>Weak:</strong> "Thank you for your time and consideration. I look forward to hearing from you."</p>
+<p><strong>Strong:</strong> "I'd welcome the chance to walk through how I'd approach the first 90 days in this role — especially the loyalty migration. I'll be in the Bay Area the week of May 5 if an in-person conversation works, and happy to do video any week before that."</p>
+
+<h2>A Full Cover Letter Example You Can Steal</h2>
+<p>Change the details to match your situation.</p>
+<p>Dear Hiring Team,</p>
+<p>When Acme launched the rewards program rebuild last quarter, the post-mortem your VP of Marketing shared on LinkedIn was the first time I'd seen a growth team publicly admit what didn't work. That kind of thinking is why I'm applying for the Senior Marketing Manager role.</p>
+<p>I've spent the last four years running lifecycle marketing at a mid-sized B2C SaaS company. Two pieces of that work are directly relevant: when our email open rates flatlined at 14%, I rebuilt the segmentation model using purchase behavior and pushed open rates to 31% with a 47% lift in revenue per send; and when our referral program underperformed against industry benchmarks, I rebuilt the incentive structure from flat-rate credits to tiered milestones, which tripled referrals in six months. Both projects required me to challenge assumptions the team had inherited — which is how I'd approach the loyalty program migration you're planning.</p>
+<p>I'd welcome the chance to walk through how I'd approach the first 90 days, especially around the loyalty migration and what I'd want to learn before changing anything. I'll be in the Bay Area the week of May 5 if an in-person conversation works; happy to do video any week before that.</p>
+<p>Best,<br/>[Your Name]</p>
+
+<h2>Common Cover Letter Mistakes to Avoid</h2>
+<ol>
+  <li><strong>Repeating your resume verbatim.</strong> The recruiter has the resume right next to the cover letter. Tell them something the resume can't — context, reasoning, or a specific motivation.</li>
+  <li><strong>Opening with "I am writing to apply for…"</strong> Dead on arrival. Start with something specific, unexpected, or about the company — not about you.</li>
+  <li><strong>Using the same cover letter for every job.</strong> Recruiters spot templated cover letters in three seconds. If you're not going to customize, don't send one.</li>
+  <li><strong>Making it about what YOU want.</strong> "I'm looking for an opportunity to grow" is about you. "I want to help Acme solve X because Y" is about them. Always flip to their perspective.</li>
+  <li><strong>Overusing adjectives.</strong> "Dynamic, results-oriented, detail-oriented, self-starter." Every recruiter has a filter for this. Cut every adjective you can't back with a specific example.</li>
+  <li><strong>Going over one page.</strong> Under 400 words is ideal. If it doesn't fit on one page, you're padding.</li>
+  <li><strong>Attaching it as a separate file when the form has a text box.</strong> If they give you a paste-in field, paste. An attached cover letter gets opened half the time.</li>
+</ol>
+
+<h2>Cover Letter Templates for Specific Situations</h2>
+
+<h3>Career Changer Template</h3>
+<p><em>[Company] is rebuilding [specific function] — I've been following [specific detail] since [specific moment]. My background is in [old field], but what I've done there is much closer to [new field] than the job title suggests: [one example of transferable work].</em></p>
+<p><em>In my current role, I [specific accomplishment with numbers that sounds like the new field, not the old one]. I also [second accomplishment]. Both projects are, functionally, [new field] work — even though they happened inside a [old field] org.</em></p>
+<p><em>I'd love to walk you through the connection. I've also built [portfolio project / cert / side work] specifically because I wanted to show I'm serious about the switch, not just exploring.</em></p>
+
+<h3>Recent Graduate Template</h3>
+<p><em>I've been using [company's product] since [when/why], and I noticed [specific observation about what they do that's interesting]. That's what brought me to the [role] posting.</em></p>
+<p><em>While my professional resume is short, the work I've done speaks to the role: I [specific project with scale/outcome], led [team project with quantified result], and [independent initiative that shows drive]. I'd bring that same approach to this role.</em></p>
+<p><em>I'd love 20 minutes to walk through what I'd focus on in the first 90 days.</em></p>
+
+<h3>Referral Template</h3>
+<p><em>[Name of referrer] suggested I apply for the [role] after we talked about [specific topic they mentioned about the company].</em></p>
+<p><em>Two pieces of my background are directly relevant to what [Name] described: [accomplishment 1] and [accomplishment 2]. I'd be particularly excited about [specific area of the role] because [genuine reason].</em></p>
+<p><em>[Name] is happy to speak to my work, and I'd welcome a conversation whenever works for you.</em></p>
+
+<h2>Make Sure Your Cover Letter Matches Your Resume</h2>
+<p>The cover letter and resume need to tell the same story. If your resume buries "led a team of 8" in the third bullet of a 2019 role, but your cover letter opens with leadership as your strongest skill, something's misaligned.</p>
+<p>Before sending, do this: read the cover letter first, then the resume. Do they reinforce each other? Or do they feel like two different candidates? If they don't match, the resume usually needs the fix — pull forward whatever the cover letter is highlighting.</p>
+<p>Our <a href="/builder/resume/new">AI bullet rewriter</a> helps you do this in minutes. Drop in your current resume plus the job description you're targeting, and it rewrites your bullets to reinforce the same themes your cover letter leads with.</p>
+
+<h2>Final Checklist Before You Hit Send</h2>
+<ul>
+  <li>✅ Under 400 words</li>
+  <li>✅ Three paragraphs (Hook, Proof, Close)</li>
+  <li>✅ Addresses a specific person or team — never "To Whom It May Concern"</li>
+  <li>✅ Mentions something specific about this company (not generic praise)</li>
+  <li>✅ Includes 2–3 accomplishments with measurable outcomes</li>
+  <li>✅ Closes with a specific, confident call to action</li>
+  <li>✅ Customized — not a copy-paste from a template</li>
+  <li>✅ Free of typos (read it aloud; you'll catch half of them that way)</li>
+  <li>✅ Saved as <code>FirstName_LastName_Cover_Letter.pdf</code> (never <code>cover_letter_v4_final.docx</code>)</li>
+  <li>✅ Cover letter and resume tell the same story about who you are</li>
+</ul>
+
+<h2>The TL;DR</h2>
+<p>Skip the cover letter when nobody's going to read it. Write a good one when someone will. Three paragraphs, under 400 words. Open with something specific about the company, not something generic about you. Use numbers, tie back to their problems, end with a confident call to action.</p>
+<p>That's the whole framework. Everything else is details.</p>
+    `,
+  },
+  {
+    slug: "skills-to-put-on-a-resume",
+    title: "Skills to Put on a Resume in 2026 (100+ Examples by Role)",
+    description: "The right skills to put on your resume in 2026 — with role-specific examples, hard vs soft skill guidance, and how to match skills to ATS keywords.",
+    date: "2026-04-17",
+    readTime: "10 min read",
+    category: "Resume Skills",
+    gradient: "from-fuchsia-500 to-pink-600",
+    content: `
+<p>The "Skills" section is the most mishandled part of most resumes. Job seekers either stuff it with buzzwords ("team player, go-getter, self-starter") or leave it generic to the point of uselessness ("Microsoft Office, communication, problem solving").</p>
+<p>Meanwhile, applicant tracking systems (ATS) use that exact section to decide whether you match the role. Get it wrong and you're filtered out before a human sees your name.</p>
+<p>This guide fixes that. You'll get 100+ real skill examples by role, the difference between skills that help and skills that hurt, and how to match your skills section to the ATS keywords that actually trigger callbacks.</p>
+
+<h2>The Two-Minute Rule for Picking Skills</h2>
+<p>Before you list a single skill, open the job description you're targeting and do this:</p>
+<ol>
+  <li>Copy the job description into a text document.</li>
+  <li>Highlight every noun that sounds like a skill (tool, language, framework, methodology, soft skill).</li>
+  <li>Cross-reference against your actual experience. Which ones can you honestly claim?</li>
+  <li>List those on your resume, exactly as worded in the JD.</li>
+</ol>
+<p>That's it. The skills section isn't about listing everything you've ever touched — it's about signaling "I have exactly what you asked for" to both the ATS and the human reader.</p>
+
+<h2>Hard Skills vs Soft Skills — and Why the Balance Matters</h2>
+<p><strong>Hard skills</strong> are specific, teachable, and usually tool- or process-based. They're the ones ATS parsers love because they're concrete and searchable. Examples: Python, SQL, Figma, Salesforce, French (B2), SEO, Agile/Scrum, financial modeling, CAD, video editing in Premiere Pro.</p>
+<p><strong>Soft skills</strong> are harder to measure but often the thing that actually gets you hired once you're in the room. ATS parsers rarely trigger on soft skills, but human readers weight them heavily. Examples: stakeholder management, cross-functional collaboration, executive communication, mentoring, conflict resolution.</p>
+<p><strong>The right ratio for 2026:</strong> About 70% hard skills, 30% soft skills in your skills section. List 8–12 skills total — more looks like padding, less looks like you're hiding something.</p>
+
+<h2>What to Cut from Your Skills Section (Immediately)</h2>
+<ul>
+  <li><strong>"Microsoft Office" or "Microsoft Word."</strong> It's 2026. Recruiters assume you can use a word processor.</li>
+  <li><strong>"Communication."</strong> Everyone claims it. Without context, it means nothing. Replace with "Executive presentation," "Technical writing," or "Client-facing communication."</li>
+  <li><strong>"Hardworking" / "Team player" / "Go-getter."</strong> Not skills. Adjectives. Every candidate uses them.</li>
+  <li><strong>Languages you took in high school.</strong> Unless you can hold a professional conversation, don't list it.</li>
+  <li><strong>Software from 10 years ago</strong> (unless it's still industry-standard).</li>
+  <li><strong>Generic buzzwords without a system attached.</strong> "Leadership" alone is weak. "Cross-functional team leadership" is fine and credible.</li>
+</ul>
+
+<h2>100+ Skills Organized by Role</h2>
+<p>Pull from these based on what fits your actual experience AND the job description. Don't list skills you can't back up if asked in an interview.</p>
+
+<h3>Software Engineering / Technical</h3>
+<p><strong>Languages &amp; Frameworks:</strong> Python, JavaScript, TypeScript, Go, Rust, Java, C++, C#, Ruby, Swift, Kotlin, React, Next.js, Vue.js, Angular, Node.js, Django, Flask, Spring Boot, .NET, Laravel, Rails</p>
+<p><strong>Data &amp; Infrastructure:</strong> PostgreSQL, MySQL, MongoDB, Redis, DynamoDB, GraphQL, REST APIs, gRPC, AWS (EC2, S3, Lambda, RDS), GCP, Azure, Kubernetes, Docker, Terraform, CI/CD, GitHub Actions, Jenkins</p>
+<p><strong>Practices:</strong> Test-driven development, Code review, Microservices architecture, Event-driven design, Agile/Scrum, System design, Performance optimization, Security best practices</p>
+
+<h3>Data / Analytics</h3>
+<p>SQL, Python (pandas, NumPy, scikit-learn), R, Tableau, Power BI, Looker, dbt, Snowflake, BigQuery, Databricks, Airflow, Statistical modeling, A/B testing, Experiment design, Cohort analysis, Regression analysis, Forecasting, Data visualization, ETL, Data warehousing</p>
+
+<h3>Product Management</h3>
+<p>Roadmap planning, User research, Product strategy, Stakeholder management, JIRA, Linear, Figma, Miro, Notion, Productboard, Amplitude, Mixpanel, A/B testing, OKR frameworks, Agile, Scrum, Kanban, User story writing, PRD writing, Cross-functional leadership, Technical fluency, Go-to-market strategy</p>
+
+<h3>Design / UX</h3>
+<p>Figma, Adobe XD, Sketch, Framer, Principle, InVision, Prototyping, Wireframing, User research, Usability testing, Design systems, Accessibility (WCAG), Interaction design, Information architecture, Motion design, Design ops, HTML/CSS, Adobe Creative Suite</p>
+
+<h3>Marketing</h3>
+<p>SEO, SEM, Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads, Google Analytics 4, Google Tag Manager, HubSpot, Marketo, Salesforce Marketing Cloud, Mailchimp, Klaviyo, Email marketing, Lifecycle marketing, Content strategy, Brand strategy, Marketing analytics, Attribution modeling, CRO, Performance marketing, Growth marketing, B2B marketing, B2C marketing</p>
+
+<h3>Sales</h3>
+<p>Salesforce CRM, HubSpot CRM, Outreach, Salesloft, Gong, Lead generation, Prospecting, Cold outreach, Discovery calls, Solution selling, MEDDIC, SPIN selling, Challenger sale, Pipeline management, Forecasting, Contract negotiation, Account management, Territory planning, Quota carrying, Upselling, Cross-selling, Customer retention</p>
+
+<h3>Finance / Accounting</h3>
+<p>Financial modeling, Forecasting, Budgeting, Variance analysis, Excel (advanced), SQL, Bloomberg Terminal, FactSet, NetSuite, QuickBooks, SAP, Oracle Financials, GAAP, IFRS, Audit, FP&amp;A, Capital planning, Cash flow analysis, Valuation (DCF, comps, precedent transactions), M&amp;A analysis</p>
+
+<h3>Operations / Project Management</h3>
+<p>PMP, PRINCE2, Agile, Scrum, Lean, Six Sigma, Kanban, JIRA, Asana, Monday, Smartsheet, Project scheduling, Resource allocation, Risk management, Vendor management, Process improvement, SOPs, KPI tracking, Cross-functional collaboration, Stakeholder communication</p>
+
+<h3>General Soft Skills (Use Sparingly, With Context)</h3>
+<p>Executive communication, Written communication, Public speaking, Cross-functional collaboration, Stakeholder management, Mentoring and coaching, Conflict resolution, Decision-making under uncertainty, Prioritization, Adaptability, Analytical thinking, Systems thinking, Customer empathy, Strategic thinking</p>
+
+<h2>How to Match Your Skills to ATS Keywords</h2>
+<p>This is the part most job seekers skip — and it's the single biggest lever on whether your resume gets through.</p>
+<p><strong>Step 1: Scrape the exact keywords from the job description.</strong> Look at the "Requirements" and "Qualifications" sections. Every skill listed there is a keyword the ATS will scan for. If they wrote "Salesforce CRM," use "Salesforce CRM" on your resume — not "SFDC," not "CRM systems."</p>
+<p><strong>Step 2: Check which of those keywords already appear on your resume.</strong> Go through your resume and highlight every instance. Missing a key term? Add it (if you can honestly claim it).</p>
+<p><strong>Step 3: Prioritize keywords that appear multiple times in the JD.</strong> If a JD mentions "Python" once and "SQL" five times, SQL is clearly higher-weighted. Make sure SQL shows up in your skills section AND at least one bullet point.</p>
+<p><strong>Step 4: Don't stuff keywords where they don't belong.</strong> ATS systems are reasonably good at detecting keyword stuffing.</p>
+
+<h2>Free Tool to Do This in Seconds</h2>
+<p>Matching keywords manually is tedious. That's why we built our <a href="/ats-checker">ATS Checker</a> — paste your resume and any job description, and it tells you your match percentage, which required keywords are missing, which skills are underweighted, and where exactly to add each keyword in your resume.</p>
+
+<h2>The Three Skills Section Formats That Work</h2>
+
+<h3>Format 1: Grouped by Category (best for most roles)</h3>
+<p><strong>SKILLS</strong><br/>
+Technical: Python, SQL, Tableau, dbt, Snowflake, Airflow<br/>
+Analytical: A/B testing, Cohort analysis, Forecasting, Regression modeling<br/>
+Business: Stakeholder management, Cross-functional collaboration, Executive communication</p>
+
+<h3>Format 2: Flat List (best for senior or technical roles)</h3>
+<p><strong>SKILLS</strong><br/>
+Python • SQL • Tableau • dbt • Snowflake • Airflow • A/B testing • Cohort analysis • Stakeholder management</p>
+
+<h3>Format 3: Rated / Proficiency (USE WITH CAUTION)</h3>
+<p><strong>Warning:</strong> Don't use the rated format unless you're fully willing to defend the ratings in interviews. "Expert in SQL" gets you a whiteboard test.</p>
+
+<h2>Industry-Specific Keyword Patterns (2026)</h2>
+<ul>
+  <li><strong>AI / ML engineering:</strong> LLMs, prompt engineering, RAG, vector databases, fine-tuning, PyTorch, Transformers, LangChain, evaluation frameworks</li>
+  <li><strong>Fintech:</strong> KYC/AML compliance, PCI DSS, fraud detection, SOC 2, real-time payments, risk modeling</li>
+  <li><strong>Health tech:</strong> HIPAA, HL7/FHIR, clinical workflows, EHR integration (Epic, Cerner), medical coding (ICD-10, CPT)</li>
+  <li><strong>Climate / clean energy:</strong> ESG reporting, carbon accounting (GHG Protocol), LCA, renewable energy systems, grid optimization</li>
+  <li><strong>Creator economy / content:</strong> Short-form video strategy, community management, creator partnerships, influencer analytics, platform-specific growth</li>
+</ul>
+
+<h2>Skills Mistakes That Get You Rejected</h2>
+<ol>
+  <li><strong>Listing skills you can't back up.</strong> A single interview question exposes the lie. Never list a skill you can't discuss for three minutes.</li>
+  <li><strong>Using the wrong level of seniority language.</strong> A senior resume that says "basic knowledge of Python" looks weaker than one that says "Python for data analysis."</li>
+  <li><strong>Spelling errors in skill names.</strong> "Javscript." "Illustrater." "Kubernetees." It's 2026 and spellcheck exists.</li>
+  <li><strong>Adding skills that contradict your resume.</strong> Skills should reinforce the story, not contradict it.</li>
+  <li><strong>Forgetting to update for the target role.</strong> A static skills section = lower match rate.</li>
+</ol>
+
+<h2>Quick Checklist Before You Submit</h2>
+<ul>
+  <li>✅ Skills section has 8–12 skills, not 30</li>
+  <li>✅ Hard skills and soft skills at roughly 70/30</li>
+  <li>✅ Exact keywords from the job description are present</li>
+  <li>✅ No "Microsoft Office" or "communication" without qualification</li>
+  <li>✅ No skills you can't honestly defend in an interview</li>
+  <li>✅ Spelling and capitalization match industry conventions</li>
+  <li>✅ Your skills reinforce, not contradict, your experience bullets</li>
+  <li>✅ Customized to this specific role — not the same list for every application</li>
+</ul>
+
+<h2>The TL;DR</h2>
+<p>The skills section isn't a dumping ground. It's a precision tool for signaling to both ATS parsers and human readers that you match the role. Pull exact keywords from the job description, list 8–12 skills you can defend, skip the buzzwords, and update the section for every application. Do that, and your callback rate will jump — often dramatically.</p>
+    `,
+  },
 ];
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
