@@ -1,10 +1,9 @@
 /**
  * High-fidelity resume thumbnail previews.
- * Renders as a miniaturised, proportional resume document for each layout type.
+ * Premium 2026 design — real typography, generous whitespace, restrained color.
  *
- * Accepts an optional `content` prop to show real text (name, role, company,
- * skills, summary) instead of placeholder bars. When omitted, falls back to
- * abstract bars for the generic template thumbnail.
+ * Accepts optional `content` prop to render real text (name, role, skills).
+ * Falls back to refined placeholder bars when no content is provided.
  */
 
 import type { ResumeData } from "@/types";
@@ -19,7 +18,7 @@ export type TemplateLayout =
 
 export interface PreviewContent {
   name?: string;
-  title?: string;       // e.g. "Senior Software Engineer"
+  title?: string;
   location?: string;
   email?: string;
   summary?: string;
@@ -38,26 +37,15 @@ export interface PreviewContent {
 }
 
 /**
- * Extract simplified preview content from a full ResumeData object.
- *
- * Defensive against:
- * - null/undefined input
- * - empty objects
- * - legacy/mismatched field shapes (e.g. an older `bullets` array, strings where arrays expected)
- * - non-string values where strings expected
- *
- * Returns undefined on any internal error so the preview gracefully falls back
- * to the generic placeholder bars rather than crashing the page.
+ * Defensively extract simplified preview content from a full ResumeData object.
+ * Handles legacy field names, null/undefined, and unexpected shapes.
  */
 export function previewFromResumeData(data?: Partial<ResumeData> | null): PreviewContent | undefined {
   try {
     if (!data || typeof data !== 'object') return undefined;
-
     const asString = (v: unknown): string | undefined =>
       typeof v === 'string' && v.trim() ? v : undefined;
-
-    const asArray = <T,>(v: unknown): T[] =>
-      Array.isArray(v) ? (v as T[]) : [];
+    const asArray = <T,>(v: unknown): T[] => Array.isArray(v) ? (v as T[]) : [];
 
     const contact = (data as { contact?: unknown }).contact;
     const contactObj = (contact && typeof contact === 'object') ? contact as Record<string, unknown> : {};
@@ -71,8 +59,7 @@ export function previewFromResumeData(data?: Partial<ResumeData> | null): Previe
     const experiences = workRaw.slice(0, 3).map((w) => ({
       role: asString(w.job_title) ?? asString((w as { position?: unknown }).position) ?? '',
       company: asString(w.company) ?? '',
-      dates:
-        w.is_current ? 'Present'
+      dates: w.is_current ? 'Present'
         : asString(w.end_date) ?? asString((w as { endDate?: unknown }).endDate) ?? '',
       bullets: asArray<unknown>(w.achievements ?? (w as { bullets?: unknown }).bullets)
         .filter((b) => typeof b === 'string')
@@ -104,610 +91,379 @@ export function previewFromResumeData(data?: Partial<ResumeData> | null): Previe
       skills,
     };
   } catch (err) {
-    // Malformed data — fall back to placeholder bars rather than crash the UI.
-    if (typeof console !== 'undefined') console.warn('previewFromResumeData: ignoring malformed resume data', err);
+    if (typeof console !== 'undefined') console.warn('previewFromResumeData: malformed data', err);
     return undefined;
   }
 }
 
-/* ─── Primitive helpers ──────────────────────────────────────────────────── */
+/* ─── Tokens ────────────────────────────────────────────────────────────── */
 
-/** A horizontal "text" bar. Falls back from text if provided & legible. */
-const Bar = ({
-  w,
-  dark = false,
-  accent,
-  op = 1,
-}: {
-  w: string;
-  dark?: boolean;
-  accent?: string;
-  op?: number;
-}) => (
+const INK = "#0f172a";
+const INK_MUTED = "#475569";
+const INK_LIGHT = "#94a3b8";
+const RULE = "#e2e8f0";
+const RULE_FAINT = "#f1f5f9";
+
+/* ─── Primitives ────────────────────────────────────────────────────────── */
+
+/** Faint body-text bar — used only when there's no real text to show. */
+const BodyBar = ({ w = "w-full", op = 1 }: { w?: string; op?: number }) => (
   <div
-    className={`h-[2.5px] ${w} rounded-full`}
-    style={{
-      backgroundColor: accent ?? (dark ? "#334155" : "#cbd5e1"),
-      opacity: op,
-    }}
+    className={`h-[1.5px] ${w} rounded-full`}
+    style={{ backgroundColor: RULE, opacity: op }}
   />
 );
 
-const ThinBar = ({ w, op = 1 }: { w: string; op?: number }) => (
+/** Real body text line — small but legible. */
+const BodyLine = ({ text, size = 5.5, color = INK_MUTED, weight = 400 }: { text: string; size?: number; color?: string; weight?: number }) => (
   <div
-    className={`h-[1.5px] ${w} rounded-full bg-slate-200`}
-    style={{ opacity: op }}
-  />
-);
-
-const Divider = ({ accent, op = 0.25 }: { accent: string; op?: number }) => (
-  <div className="w-full h-px" style={{ backgroundColor: accent, opacity: op }} />
-);
-
-const SectionHead = ({
-  accent,
-  style = "rule",
-  label,
-}: {
-  accent: string;
-  style?: "rule" | "bar" | "underline";
-  label?: string;
-}) => {
-  if (label) {
-    return (
-      <div className="mb-[3px]">
-        <div
-          className="text-[5.5px] font-bold uppercase tracking-wider leading-none"
-          style={{ color: accent, letterSpacing: "0.08em" }}
-        >
-          {label}
-        </div>
-        <div className="h-px w-full mt-[1px]" style={{ backgroundColor: accent, opacity: 0.3 }} />
-      </div>
-    );
-  }
-  if (style === "bar") {
-    return (
-      <div
-        className="h-[2px] w-[38%] rounded-full mb-[3px]"
-        style={{ backgroundColor: accent }}
-      />
-    );
-  }
-  if (style === "underline") {
-    return (
-      <div className="mb-[3px]">
-        <div className="h-[2px] w-[32%] rounded-full mb-[1px]" style={{ backgroundColor: accent }} />
-        <div className="h-px w-full bg-slate-200" />
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-[3px] mb-[3px]">
-      <div className="h-px flex-1" style={{ backgroundColor: accent, opacity: 0.25 }} />
-      <div className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: accent }} />
-      <div className="h-px flex-1" style={{ backgroundColor: accent, opacity: 0.25 }} />
-    </div>
-  );
-};
-
-const Bullet = ({ accent, w }: { accent: string; w: string }) => (
-  <div className="flex items-center gap-[2.5px] mb-[1.5px]">
-    <div
-      className="w-[2.5px] h-[2.5px] rounded-full shrink-0"
-      style={{ backgroundColor: accent, opacity: 0.6 }}
-    />
-    <ThinBar w={w} />
+    className="leading-[1.35] truncate"
+    style={{ fontSize: size, color, fontWeight: weight }}
+  >
+    {text}
   </div>
 );
 
-const SkillPill = ({ accent, w, label }: { accent: string; w?: number; label?: string }) => {
-  if (label) {
-    return (
-      <span
-        className="text-[5.5px] font-medium px-[3px] py-[1px] rounded-full truncate leading-none"
-        style={{
-          backgroundColor: accent + "22",
-          color: accent,
-          maxWidth: 60,
-        }}
-      >
-        {label}
-      </span>
-    );
-  }
-  return (
-    <div
-      className="h-[5px] rounded-full"
-      style={{ width: `${w}px`, backgroundColor: accent, opacity: 0.18 }}
-    />
-  );
-};
-
-/** Render real text at micro size, or fall back to Bar. */
-const NameText = ({ text, accent, size = 11 }: { text?: string; accent?: string; size?: number }) =>
+/** Name (largest text in the preview). */
+const Name = ({ text, size = 12, color = INK, tracking = "-0.015em" }: { text?: string; size?: number; color?: string; tracking?: string }) => (
   text ? (
     <div
       className="font-bold leading-none truncate"
-      style={{ fontSize: size, color: accent ?? "#0f172a", letterSpacing: "-0.01em" }}
+      style={{ fontSize: size, color, letterSpacing: tracking }}
     >
       {text}
     </div>
   ) : (
-    <div
-      className="h-[6px] w-[52%] rounded-full"
-      style={{ backgroundColor: accent ?? "#334155" }}
-    />
-  );
+    <div className="h-[7px] w-[55%] rounded-full" style={{ backgroundColor: color }} />
+  )
+);
 
-const TitleText = ({ text, size = 7, op = 0.7 }: { text?: string; size?: number; op?: number }) =>
+/** Job title / subtitle under the name. */
+const Subtitle = ({ text, size = 7, color = INK_MUTED, tracking = "0em" }: { text?: string; size?: number; color?: string; tracking?: string }) => (
   text ? (
     <div
-      className="font-medium text-slate-700 leading-none truncate"
-      style={{ fontSize: size, opacity: op }}
+      className="font-medium leading-none truncate"
+      style={{ fontSize: size, color, letterSpacing: tracking }}
     >
       {text}
     </div>
   ) : (
-    <Bar w="w-[33%]" dark op={op} />
-  );
+    <div className="h-[3px] w-[38%] rounded-full" style={{ backgroundColor: color, opacity: 0.55 }} />
+  )
+);
 
-const BodyText = ({ text, size = 6, className = "" }: { text?: string; size?: number; className?: string }) =>
-  text ? (
+/** Small-caps section header with accent rule. */
+const SectionHeader = ({ label, accent, rule = true, center = false }: { label: string; accent: string; rule?: boolean; center?: boolean }) => (
+  <div className={`mb-[3px] ${center ? "text-center" : ""}`}>
     <div
-      className={`text-slate-600 leading-tight ${className}`}
-      style={{ fontSize: size }}
+      className="font-bold uppercase leading-none inline-block"
+      style={{ fontSize: 5.5, letterSpacing: "0.14em", color: accent }}
+    >
+      {label}
+    </div>
+    {rule && <div className="h-px w-full mt-[2px]" style={{ backgroundColor: accent, opacity: 0.22 }} />}
+  </div>
+);
+
+/** Bullet with accent dot + body bar (used when no real bullet text). */
+const BulletBar = ({ accent, w = "w-full" }: { accent: string; w?: string }) => (
+  <div className="flex items-center gap-[3px] mb-[2px]">
+    <div className="w-[2.5px] h-[2.5px] rounded-full shrink-0" style={{ backgroundColor: accent, opacity: 0.7 }} />
+    <BodyBar w={w} />
+  </div>
+);
+
+/** Real bullet text — truncated to fit the thumbnail. */
+const BulletLine = ({ text, accent }: { text: string; accent: string }) => (
+  <div className="flex items-start gap-[3px] mb-[1.5px]">
+    <div className="w-[2.5px] h-[2.5px] rounded-full shrink-0 mt-[2.5px]" style={{ backgroundColor: accent, opacity: 0.7 }} />
+    <div
+      className="leading-[1.35] truncate"
+      style={{ fontSize: 5, color: INK_MUTED }}
     >
       {text}
-    </div>
-  ) : null;
-
-/* ─── Job entry with optional real content ──────────────────────────────── */
-const JobEntry = ({
-  accent,
-  title = "w-[42%]",
-  date = "w-[22%]",
-  company = "w-[30%]",
-  bullets = 2,
-  exp,
-}: {
-  accent: string;
-  title?: string;
-  date?: string;
-  company?: string;
-  bullets?: number;
-  exp?: { role: string; company: string; dates?: string; bullets?: string[] };
-}) => (
-  <div className="mb-[4px]">
-    <div className="flex items-center justify-between mb-[1.5px] gap-[4px]">
-      {exp ? (
-        <div className="font-semibold text-slate-800 leading-none truncate flex-1" style={{ fontSize: 7 }}>
-          {exp.role}
-        </div>
-      ) : (
-        <Bar w={title} dark />
-      )}
-      {exp?.dates ? (
-        <div className="text-slate-500 leading-none shrink-0" style={{ fontSize: 5.5 }}>
-          {exp.dates}
-        </div>
-      ) : (
-        <Bar w={date} op={0.6} />
-      )}
-    </div>
-    {exp ? (
-      <div className="text-slate-600 leading-none truncate" style={{ fontSize: 6, opacity: 0.8 }}>
-        {exp.company}
-      </div>
-    ) : (
-      <Bar w={company} op={0.65} />
-    )}
-    <div className="mt-[2px]">
-      <Bullet accent={accent} w="w-full" />
-      <Bullet accent={accent} w="w-10/12" />
-      {bullets >= 3 && <Bullet accent={accent} w="w-4/5" />}
     </div>
   </div>
 );
 
-/* ─── CLASSIC ─────────────────────────────────────────────────────────────── */
+/** Skill pill — rounded chip, subtle accent background. */
+const SkillChip = ({ accent, label, w }: { accent: string; label?: string; w?: number }) => label ? (
+  <span
+    className="inline-flex items-center font-medium leading-none truncate max-w-[64px]"
+    style={{
+      fontSize: 5,
+      padding: "1.5px 4px",
+      borderRadius: 999,
+      color: accent,
+      backgroundColor: accent + "1a",
+      border: `1px solid ${accent}2a`,
+    }}
+  >
+    {label}
+  </span>
+) : (
+  <div
+    className="h-[6px] rounded-full"
+    style={{ width: `${w ?? 24}px`, backgroundColor: accent + "2a", border: `1px solid ${accent}1a` }}
+  />
+);
+
+/** Divider — thin hairline for section separation. */
+const HR = ({ color = RULE, op = 1 }: { color?: string; op?: number }) => (
+  <div className="h-px w-full" style={{ backgroundColor: color, opacity: op }} />
+);
+
+/** Contact row — icons + short text. */
+const ContactRow = ({ items, color = INK_LIGHT, inline = true }: { items: string[]; color?: string; inline?: boolean }) => (
+  <div className={`flex ${inline ? "items-center gap-[7px] flex-wrap" : "flex-col gap-[2px]"}`}>
+    {items.filter(Boolean).map((t, i) => (
+      <div key={i} className="flex items-center gap-[2px] min-w-0">
+        <div className="w-[2.5px] h-[2.5px] rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <div className="leading-none truncate" style={{ fontSize: 5, color, fontWeight: 500 }}>
+          {t}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/** Job entry — real text when exp present, otherwise bars. */
+const JobEntry = ({
+  accent,
+  exp,
+  compact = false,
+}: {
+  accent: string;
+  exp?: { role: string; company: string; dates?: string; bullets?: string[] };
+  compact?: boolean;
+}) => (
+  <div className={compact ? "mb-[4px]" : "mb-[6px]"}>
+    <div className="flex items-center justify-between gap-[6px] mb-[1px]">
+      {exp ? (
+        <div
+          className="font-semibold leading-none truncate flex-1"
+          style={{ fontSize: 7, color: INK }}
+        >
+          {exp.role}
+        </div>
+      ) : (
+        <div className="h-[3px] w-[48%] rounded-full" style={{ backgroundColor: INK }} />
+      )}
+      {exp?.dates ? (
+        <div className="leading-none shrink-0" style={{ fontSize: 5, color: INK_LIGHT, fontStyle: "italic" }}>
+          {exp.dates}
+        </div>
+      ) : (
+        <div className="h-[2.5px] w-[22%] rounded-full" style={{ backgroundColor: INK_LIGHT }} />
+      )}
+    </div>
+    {exp ? (
+      <div className="leading-none truncate" style={{ fontSize: 6, color: accent, fontWeight: 500 }}>
+        {exp.company}
+      </div>
+    ) : (
+      <div className="h-[2.5px] w-[32%] rounded-full" style={{ backgroundColor: accent, opacity: 0.75 }} />
+    )}
+    <div className="mt-[3px]">
+      {exp?.bullets && exp.bullets.length > 0 ? (
+        exp.bullets.slice(0, compact ? 1 : 2).map((b, i) => <BulletLine key={i} text={b} accent={accent} />)
+      ) : (
+        <>
+          <BulletBar accent={accent} />
+          <BulletBar accent={accent} w="w-10/12" />
+        </>
+      )}
+    </div>
+  </div>
+);
+
+/* ─── CLASSIC ────────────────────────────────────────────────────────────── */
 function ClassicLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
   return (
-    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "7px 8px 5px" }}>
-      <div className="h-[5px] w-full rounded-sm mb-[5px]" style={{ backgroundColor: accent }} />
-
+    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "10px 11px 8px" }}>
       {/* Header */}
-      <div className="mb-[4px]">
-        <NameText text={content?.name} accent={accent} size={11} />
-        <div className="mt-[1px]">
-          <TitleText text={content?.title} size={6.5} op={0.75} />
+      <div className="mb-[5px]">
+        <Name text={content?.name} size={13} tracking="-0.02em" />
+        <div className="mt-[3px]">
+          <Subtitle text={content?.title} size={7} color={accent} />
         </div>
-        {content?.location || content?.email ? (
-          <div
-            className="mt-[3px] text-slate-500 leading-none truncate"
-            style={{ fontSize: 5 }}
-          >
-            {[content.location, content.email].filter(Boolean).join(" · ")}
-          </div>
-        ) : (
-          <div className="flex items-center gap-[5px] mt-[3px]">
-            {[22, 28, 20].map((w, i) => (
-              <div key={i} className="flex items-center gap-[2px]">
-                <div className="w-[2.5px] h-[2.5px] rounded-full" style={{ backgroundColor: accent, opacity: 0.5 }} />
-                <ThinBar w={`w-[${w}px]`} />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="mt-[4px]">
+          <ContactRow
+            items={content?.email || content?.location ? [content.email, content.location].filter(Boolean) as string[] : ["email@example.com", "Location", "Phone"]}
+          />
+        </div>
       </div>
 
-      <Divider accent={accent} />
+      <div className="h-[2px] w-full mb-[6px]" style={{ backgroundColor: accent }} />
 
       {/* Summary */}
-      <div className="mt-[3px] mb-[4px]">
-        <SectionHead accent={accent} label={content?.summary ? "Summary" : undefined} />
-        {content?.summary ? (
-          <BodyText text={content.summary.slice(0, 100) + (content.summary.length > 100 ? '…' : '')} size={5} className="line-clamp-2" />
-        ) : (
-          <>
-            <ThinBar w="w-full" />
-            <div className="mt-[1.5px]"><ThinBar w="w-11/12" /></div>
-            <div className="mt-[1.5px]"><ThinBar w="w-4/5" /></div>
-          </>
-        )}
-      </div>
+      {content?.summary ? (
+        <div className="mb-[7px]">
+          <SectionHeader label="Summary" accent={accent} />
+          <BodyLine text={content.summary.slice(0, 130)} size={5.5} />
+          <div className="mt-[1px]"><BodyLine text={content.summary.slice(130, 260) || ' '} size={5.5} /></div>
+        </div>
+      ) : (
+        <div className="mb-[7px]">
+          <SectionHeader label="Summary" accent={accent} />
+          <BodyBar />
+          <div className="mt-[2px]"><BodyBar w="w-11/12" /></div>
+          <div className="mt-[2px]"><BodyBar w="w-4/5" /></div>
+        </div>
+      )}
 
       {/* Experience */}
-      <div className="mb-[3px]">
-        <SectionHead accent={accent} label={content?.experiences?.length ? "Experience" : undefined} />
+      <div className="mb-[6px]">
+        <SectionHeader label="Experience" accent={accent} />
         {content?.experiences && content.experiences.length > 0 ? (
-          content.experiences.slice(0, 2).map((e, i) => (
-            <JobEntry key={i} accent={accent} exp={e} bullets={3} />
-          ))
+          content.experiences.slice(0, 2).map((e, i) => <JobEntry key={i} accent={accent} exp={e} />)
         ) : (
           <>
-            <JobEntry accent={accent} title="w-[38%]" date="w-[20%]" company="w-[28%]" bullets={3} />
-            <JobEntry accent={accent} title="w-[42%]" date="w-[18%]" company="w-[32%]" bullets={2} />
+            <JobEntry accent={accent} />
+            <JobEntry accent={accent} compact />
           </>
         )}
       </div>
 
       {/* Skills */}
       <div>
-        <SectionHead accent={accent} label={content?.skills?.length ? "Skills" : undefined} />
-        {content?.skills && content.skills.length > 0 ? (
-          <div className="flex flex-wrap gap-[2.5px] mt-[1px]">
-            {content.skills.slice(0, 6).map((s, i) => (
-              <SkillPill key={i} accent={accent} label={s} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-[2.5px] mt-[1px]">
-            {[28, 36, 22, 32, 26, 30, 20].map((w, i) => (
-              <SkillPill key={i} accent={accent} w={w} />
-            ))}
-          </div>
-        )}
+        <SectionHeader label="Skills" accent={accent} />
+        <div className="flex flex-wrap gap-[3px] mt-[1px]">
+          {content?.skills && content.skills.length > 0
+            ? content.skills.slice(0, 7).map((s, i) => <SkillChip key={i} accent={accent} label={s} />)
+            : [30, 38, 26, 34, 28, 32, 24].map((w, i) => <SkillChip key={i} accent={accent} w={w} />)}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+/* ─── SIDEBAR ────────────────────────────────────────────────────────────── */
 function SidebarLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+  const initials = content?.name
+    ? content.name.split(/\s+/).map((n) => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+    : "";
   return (
     <div className="w-full h-full flex">
-      {/* Left panel */}
+      {/* Left dark sidebar */}
       <div
-        className="w-[32%] h-full flex flex-col shrink-0"
-        style={{ backgroundColor: accent, padding: "8px 5px 6px" }}
+        className="w-[34%] h-full flex flex-col shrink-0 relative overflow-hidden"
+        style={{ backgroundColor: accent, padding: "11px 6px 8px" }}
       >
-        <div className="w-[24px] h-[24px] rounded-full bg-white/25 mx-auto mb-[4px] flex items-center justify-center border-2 border-white/40">
-          <div className="text-white font-bold" style={{ fontSize: 9 }}>
-            {content?.name ? content.name.split(/\s+/).map(n => n[0]).slice(0, 2).join('') : ''}
-          </div>
+        {/* Avatar */}
+        <div className="w-[34px] h-[34px] rounded-full mx-auto mb-[5px] flex items-center justify-center text-white font-bold"
+          style={{ backgroundColor: "rgba(255,255,255,0.18)", fontSize: 10, border: "1.5px solid rgba(255,255,255,0.35)" }}>
+          {initials || "•"}
         </div>
-        {/* Name on sidebar */}
         {content?.name ? (
-          <div className="text-white text-center font-bold leading-none truncate mb-[1px]" style={{ fontSize: 7 }}>
+          <div className="text-white text-center font-bold leading-tight truncate px-[2px] mb-[2px]" style={{ fontSize: 8, letterSpacing: "-0.01em" }}>
             {content.name}
           </div>
         ) : (
-          <div className="h-[3px] w-[85%] rounded-full bg-white/90 mx-auto mb-[2px]" />
+          <div className="h-[3px] w-[85%] rounded-full bg-white/90 mx-auto mb-[3px]" />
         )}
         {content?.title ? (
-          <div className="text-white/75 text-center leading-tight truncate mb-[6px] px-[2px]" style={{ fontSize: 5 }}>
+          <div className="text-center leading-tight truncate px-[2px] mb-[8px]" style={{ fontSize: 5.5, color: "rgba(255,255,255,0.75)" }}>
             {content.title}
           </div>
         ) : (
-          <div className="h-[2px] w-[65%] rounded-full bg-white/55 mx-auto mb-[6px]" />
+          <div className="h-[2px] w-[65%] rounded-full bg-white/55 mx-auto mb-[8px]" />
         )}
 
-        <div className="h-px w-full bg-white/20 mb-[4px]" />
+        <div className="h-px bg-white/20 mb-[6px]" />
 
-        {/* Skills on sidebar */}
-        <div className="mb-[5px]">
-          <div className="text-white/75 font-bold uppercase tracking-wider mb-[3px] leading-none" style={{ fontSize: 5, letterSpacing: "0.08em" }}>
+        {/* Skills */}
+        <div className="mb-[6px]">
+          <div className="text-white font-bold uppercase mb-[4px] leading-none" style={{ fontSize: 4.5, letterSpacing: "0.18em", color: "rgba(255,255,255,0.85)" }}>
             Skills
           </div>
           {content?.skills && content.skills.length > 0 ? (
-            content.skills.slice(0, 6).map((s, i) => (
-              <div
-                key={i}
-                className="text-white/90 leading-none truncate mb-[2.5px]"
-                style={{ fontSize: 5.5 }}
-              >
-                · {s}
-              </div>
-            ))
-          ) : (
-            [80, 65, 90, 70, 75].map((pct, i) => (
-              <div key={i} className="mb-[3px]">
-                <div className="h-[1.5px] rounded-full bg-white/25 mb-[1px]" />
-                <div className="h-[2px] rounded-full bg-white/70" style={{ width: `${pct}%` }} />
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="h-px w-full bg-white/20 mb-[4px]" />
-
-        {/* Contact */}
-        <div>
-          <div className="text-white/75 font-bold uppercase tracking-wider mb-[3px] leading-none" style={{ fontSize: 5, letterSpacing: "0.08em" }}>
-            Contact
-          </div>
-          {content?.email && (
-            <div className="text-white/85 leading-none truncate mb-[2px]" style={{ fontSize: 5 }}>{content.email}</div>
-          )}
-          {content?.location && (
-            <div className="text-white/85 leading-none truncate" style={{ fontSize: 5 }}>{content.location}</div>
-          )}
-          {!content?.email && !content?.location && (
-            [100, 80, 90].map((pct, i) => (
-              <div key={i} className="flex items-center gap-[2px] mb-[2px]">
-                <div className="w-[2.5px] h-[2.5px] rounded-full bg-white/55 shrink-0" />
-                <div className="h-[1.5px] rounded-full bg-white/40" style={{ width: `${pct * 0.55}%` }} />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="flex-1 bg-white flex flex-col" style={{ padding: "8px 7px 6px" }}>
-        {/* Big name */}
-        <div className="mb-[4px]">
-          {content?.name ? (
-            <div className="font-bold leading-none" style={{ fontSize: 11, color: accent }}>
-              {content.name.split(/\s+/)[0]}
-            </div>
-          ) : (
-            <div className="h-[5px] w-[60%] rounded-full" style={{ backgroundColor: accent }} />
-          )}
-          {content?.title ? (
-            <div className="font-medium text-slate-700 leading-none mt-[2px] truncate" style={{ fontSize: 6.5 }}>
-              {content.title}
-            </div>
-          ) : (
-            <div className="mt-[2px]"><Bar w="w-[40%]" dark op={0.55} /></div>
-          )}
-          <div className="h-px w-full mt-[3px]" style={{ backgroundColor: accent, opacity: 0.2 }} />
-        </div>
-
-        {/* Experience */}
-        <div className="mb-[4px]">
-          <SectionHead accent={accent} style="bar" label={content?.experiences?.length ? "Experience" : undefined} />
-          {content?.experiences && content.experiences.length > 0 ? (
-            content.experiences.slice(0, 2).map((e, i) => (
-              <JobEntry key={i} accent={accent} exp={e} bullets={2} />
-            ))
-          ) : (
-            <>
-              <JobEntry accent={accent} title="w-[50%]" date="w-[22%]" company="w-[36%]" bullets={2} />
-              <JobEntry accent={accent} title="w-[46%]" date="w-[20%]" company="w-[32%]" bullets={2} />
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── EXECUTIVE ───────────────────────────────────────────────────────────── */
-function ExecutiveLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
-  return (
-    <div className="w-full h-full bg-white flex flex-col">
-      {/* Bold header block */}
-      <div
-        className="w-full shrink-0"
-        style={{ backgroundColor: accent, padding: "9px 10px 8px" }}
-      >
-        {content?.name ? (
-          <div className="text-white font-bold leading-none mb-[2px]" style={{ fontSize: 12 }}>
-            {content.name}
-          </div>
-        ) : (
-          <div className="h-[7px] w-[55%] rounded-full bg-white mb-[3px]" />
-        )}
-        {content?.title ? (
-          <div className="text-white/80 leading-none mb-[5px] truncate" style={{ fontSize: 7 }}>
-            {content.title}
-          </div>
-        ) : (
-          <div className="h-[3px] w-[38%] rounded-full bg-white/65 mb-[5px]" />
-        )}
-        <div className="flex items-center gap-[6px]">
-          {content?.location ? (
-            <div className="text-white/70 leading-none" style={{ fontSize: 5.5 }}>
-              {[content.email, content.location].filter(Boolean).join(" · ")}
-            </div>
-          ) : (
-            [22, 26, 20].map((w, i) => (
-              <div key={i} className="flex items-center gap-[2.5px]">
-                <div className="w-[3px] h-[3px] rounded-full bg-white/55" />
-                <div className="h-[2px] rounded-full bg-white/40" style={{ width: `${w}px` }} />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col" style={{ padding: "6px 10px" }}>
-        <div className="mb-[4px]">
-          <SectionHead accent={accent} style="underline" label={content?.summary ? "Summary" : undefined} />
-          {content?.summary ? (
-            <BodyText text={content.summary.slice(0, 90) + (content.summary.length > 90 ? '…' : '')} size={5} />
-          ) : (
-            <>
-              <ThinBar w="w-full" />
-              <div className="mt-[1.5px]"><ThinBar w="w-11/12" /></div>
-              <div className="mt-[1.5px]"><ThinBar w="w-4/5" /></div>
-            </>
-          )}
-        </div>
-
-        <div className="mb-[4px]">
-          <SectionHead accent={accent} style="underline" label={content?.experiences?.length ? "Experience" : undefined} />
-          {content?.experiences && content.experiences.length > 0 ? (
-            content.experiences.slice(0, 2).map((e, i) => (
-              <JobEntry key={i} accent={accent} exp={e} bullets={2} />
-            ))
-          ) : (
-            <>
-              <JobEntry accent={accent} title="w-[40%]" date="w-[22%]" company="w-[30%]" bullets={3} />
-              <JobEntry accent={accent} title="w-[44%]" date="w-[18%]" company="w-[32%]" bullets={2} />
-            </>
-          )}
-        </div>
-
-        <div className="flex gap-[6px]">
-          <div className="flex-1">
-            <SectionHead accent={accent} style="underline" label={content?.education?.length ? "Education" : undefined} />
-            {content?.education?.[0] ? (
-              <>
-                <div className="font-semibold text-slate-800 leading-none truncate" style={{ fontSize: 6 }}>{content.education[0].degree}</div>
-                <div className="text-slate-600 leading-none mt-[1px] truncate" style={{ fontSize: 5.5 }}>{content.education[0].school}</div>
-              </>
-            ) : (
-              <>
-                <Bar w="w-[48%]" dark />
-                <div className="mt-[1.5px]"><Bar w="w-[36%]" op={0.6} /></div>
-              </>
-            )}
-          </div>
-          <div className="flex-1">
-            <SectionHead accent={accent} style="underline" label={content?.skills?.length ? "Skills" : undefined} />
-            {content?.skills && content.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-[2px] mt-[1px]">
-                {content.skills.slice(0, 5).map((s, i) => (
-                  <SkillPill key={i} accent={accent} label={s} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-[2px] mt-[1px]">
-                {[28, 22, 32, 26, 20, 30].map((w, i) => (
-                  <SkillPill key={i} accent={accent} w={w} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── MINIMAL ─────────────────────────────────────────────────────────────── */
-function MinimalLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
-  return (
-    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "8px 9px 5px" }}>
-      {/* Centered header */}
-      <div className="text-center mb-[4px]">
-        {content?.name ? (
-          <div className="font-bold text-slate-900 leading-none mb-[2px]" style={{ fontSize: 11, letterSpacing: "-0.01em" }}>
-            {content.name}
-          </div>
-        ) : (
-          <div className="h-[6px] w-[50%] rounded-full mx-auto mb-[2.5px] bg-slate-800" />
-        )}
-        {content?.title ? (
-          <div className="font-medium leading-none mb-[3px] truncate" style={{ fontSize: 6.5, color: accent }}>
-            {content.title}
-          </div>
-        ) : (
-          <div className="h-[2.5px] w-[35%] rounded-full mx-auto mb-[3px]" style={{ backgroundColor: accent }} />
-        )}
-      </div>
-
-      <div className="h-[2px] w-full rounded-full mb-[4px]" style={{ backgroundColor: accent }} />
-
-      <div className="mb-[4px]">
-        {content?.summary ? (
-          <BodyText text={content.summary.slice(0, 120) + (content.summary.length > 120 ? '…' : '')} size={5.5} />
-        ) : (
-          <>
-            <ThinBar w="w-full" />
-            <div className="mt-[1.5px]"><ThinBar w="w-11/12" /></div>
-            <div className="mt-[1.5px]"><ThinBar w="w-5/6" /></div>
-          </>
-        )}
-      </div>
-
-      <div className="h-px w-full bg-slate-200 mb-[3px]" />
-
-      <div className="mb-[3px]">
-        <div className="font-bold uppercase tracking-wider mb-[3px] leading-none" style={{ fontSize: 5.5, color: accent, letterSpacing: "0.1em" }}>
-          Experience
-        </div>
-        {content?.experiences && content.experiences.length > 0 ? (
-          content.experiences.slice(0, 2).map((e, i) => (
-            <JobEntry key={i} accent={accent} exp={e} bullets={2} />
-          ))
-        ) : (
-          <>
-            <JobEntry accent={accent} title="w-[42%]" date="w-[20%]" company="w-[32%]" bullets={2} />
-            <JobEntry accent={accent} title="w-[38%]" date="w-[18%]" company="w-[28%]" bullets={2} />
-          </>
-        )}
-      </div>
-
-      <div className="h-px w-full bg-slate-200 mb-[3px]" />
-
-      <div className="flex gap-[6px]">
-        <div className="flex-1">
-          <div className="font-bold uppercase tracking-wider mb-[2px] leading-none" style={{ fontSize: 5.5, color: accent, letterSpacing: "0.1em" }}>
-            Education
-          </div>
-          {content?.education?.[0] ? (
-            <>
-              <div className="font-semibold text-slate-800 leading-none truncate" style={{ fontSize: 6 }}>{content.education[0].degree}</div>
-              <div className="text-slate-600 leading-none mt-[1px] truncate" style={{ fontSize: 5.5 }}>{content.education[0].school}</div>
-            </>
-          ) : (
-            <>
-              <Bar w="w-[48%]" dark />
-              <div className="mt-[1px]"><Bar w="w-[36%]" op={0.6} /></div>
-            </>
-          )}
-        </div>
-        <div className="w-px bg-slate-200" />
-        <div className="flex-1">
-          <div className="font-bold uppercase tracking-wider mb-[2px] leading-none" style={{ fontSize: 5.5, color: accent, letterSpacing: "0.1em" }}>
-            Skills
-          </div>
-          {content?.skills && content.skills.length > 0 ? (
-            <div className="flex flex-wrap gap-[2px]">
-              {content.skills.slice(0, 5).map((s, i) => (
-                <SkillPill key={i} accent={accent} label={s} />
+            <div className="flex flex-col gap-[3px]">
+              {content.skills.slice(0, 6).map((s, i) => (
+                <div key={i} className="leading-none truncate" style={{ fontSize: 5.5, color: "rgba(255,255,255,0.92)" }}>
+                  {s}
+                </div>
               ))}
             </div>
           ) : (
             [80, 65, 90, 70, 75].map((pct, i) => (
-              <div key={i} className="h-[2px] rounded-full bg-slate-200 mb-[2px]">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: accent, opacity: 0.5 }} />
+              <div key={i} className="h-[2px] rounded-full mb-[3px]" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+                <div className="h-full rounded-full bg-white/75" style={{ width: `${pct}%` }} />
               </div>
             ))
+          )}
+        </div>
+
+        <div className="h-px bg-white/20 mb-[6px]" />
+
+        {/* Contact */}
+        <div>
+          <div className="text-white font-bold uppercase mb-[4px] leading-none" style={{ fontSize: 4.5, letterSpacing: "0.18em", color: "rgba(255,255,255,0.85)" }}>
+            Contact
+          </div>
+          {content?.email || content?.location ? (
+            <div className="flex flex-col gap-[2px]">
+              {content?.email && <div className="leading-none truncate" style={{ fontSize: 5, color: "rgba(255,255,255,0.85)" }}>{content.email}</div>}
+              {content?.location && <div className="leading-none truncate" style={{ fontSize: 5, color: "rgba(255,255,255,0.85)" }}>{content.location}</div>}
+            </div>
+          ) : (
+            [60, 45, 55].map((w, i) => (
+              <div key={i} className="h-[1.5px] rounded-full mb-[3px]" style={{ width: `${w}%`, backgroundColor: "rgba(255,255,255,0.4)" }} />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Right main */}
+      <div className="flex-1 bg-white flex flex-col" style={{ padding: "11px 10px 8px" }}>
+        {/* Large role title since name is on sidebar */}
+        <div className="mb-[6px]">
+          {content?.title ? (
+            <>
+              <div className="font-bold leading-none" style={{ fontSize: 10, color: INK, letterSpacing: "-0.01em" }}>
+                {content.title}
+              </div>
+              {content.experiences?.[0]?.company && (
+                <div className="mt-[2px] font-medium leading-none truncate" style={{ fontSize: 6, color: accent }}>
+                  {content.experiences[0].company}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="h-[5px] w-[60%] rounded-full" style={{ backgroundColor: INK }} />
+              <div className="mt-[2px] h-[2.5px] w-[38%] rounded-full" style={{ backgroundColor: accent }} />
+            </>
+          )}
+          <div className="h-px w-full mt-[4px]" style={{ backgroundColor: RULE }} />
+        </div>
+
+        {/* Experience */}
+        <div className="mb-[5px]">
+          <SectionHeader label="Experience" accent={accent} />
+          {content?.experiences && content.experiences.length > 0 ? (
+            content.experiences.slice(0, 2).map((e, i) => <JobEntry key={i} accent={accent} exp={e} />)
+          ) : (
+            <>
+              <JobEntry accent={accent} />
+              <JobEntry accent={accent} compact />
+            </>
+          )}
+        </div>
+
+        {/* Education */}
+        <div>
+          <SectionHeader label="Education" accent={accent} />
+          {content?.education?.[0] ? (
+            <>
+              <div className="font-semibold leading-none truncate" style={{ fontSize: 6.5, color: INK }}>{content.education[0].degree}</div>
+              <div className="mt-[1px] leading-none truncate" style={{ fontSize: 5.5, color: INK_MUTED }}>{content.education[0].school}</div>
+            </>
+          ) : (
+            <>
+              <div className="h-[3px] w-[48%] rounded-full" style={{ backgroundColor: INK }} />
+              <div className="mt-[1.5px] h-[2px] w-[32%] rounded-full" style={{ backgroundColor: INK_LIGHT }} />
+            </>
           )}
         </div>
       </div>
@@ -715,169 +471,406 @@ function MinimalLayout({ accent, content }: { accent: string; content?: PreviewC
   );
 }
 
-/* ─── CREATIVE ────────────────────────────────────────────────────────────── */
-function CreativeLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+/* ─── EXECUTIVE ──────────────────────────────────────────────────────────── */
+function ExecutiveLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+  // Subtle gradient header for premium feel
+  const headerStyle = {
+    background: `linear-gradient(135deg, ${accent} 0%, ${shadeColor(accent, -18)} 100%)`,
+    padding: "11px 12px 10px",
+  };
   return (
-    <div className="w-full h-full flex">
-      <div
-        className="w-[32%] h-full flex flex-col shrink-0"
-        style={{ backgroundColor: accent, padding: "8px 5px 6px" }}
-      >
-        <div className="w-[28px] h-[28px] rounded-full bg-white/25 mx-auto mb-[4px] flex items-center justify-center border-[2.5px] border-white/50">
-          {content?.name ? (
-            <div className="text-white font-bold leading-none" style={{ fontSize: 10 }}>
-              {content.name.split(/\s+/).map(n => n[0]).slice(0, 2).join('')}
-            </div>
+    <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full shrink-0 text-white" style={headerStyle}>
+        <Name text={content?.name} size={13} color="#ffffff" tracking="-0.02em" />
+        <div className="mt-[3px]">
+          <Subtitle text={content?.title} size={7} color="rgba(255,255,255,0.85)" />
+        </div>
+        <div className="mt-[6px]">
+          <ContactRow
+            color="rgba(255,255,255,0.75)"
+            items={content?.email || content?.location ? [content.email, content.location].filter(Boolean) as string[] : ["email@example.com", "Location", "Phone"]}
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col" style={{ padding: "8px 12px 8px" }}>
+        {/* Summary */}
+        <div className="mb-[6px]">
+          <SectionHeader label="Summary" accent={accent} />
+          {content?.summary ? (
+            <>
+              <BodyLine text={content.summary.slice(0, 120)} size={5.5} />
+              <div className="mt-[1px]"><BodyLine text={content.summary.slice(120, 240) || ' '} size={5.5} /></div>
+            </>
           ) : (
-            <div className="w-[14px] h-[14px] rounded-full bg-white/60" />
+            <>
+              <BodyBar />
+              <div className="mt-[2px]"><BodyBar w="w-11/12" /></div>
+              <div className="mt-[2px]"><BodyBar w="w-4/5" /></div>
+            </>
           )}
         </div>
+
+        {/* Experience */}
+        <div className="mb-[6px]">
+          <SectionHeader label="Experience" accent={accent} />
+          {content?.experiences && content.experiences.length > 0 ? (
+            content.experiences.slice(0, 2).map((e, i) => <JobEntry key={i} accent={accent} exp={e} compact={i > 0} />)
+          ) : (
+            <>
+              <JobEntry accent={accent} />
+              <JobEntry accent={accent} compact />
+            </>
+          )}
+        </div>
+
+        {/* Footer columns */}
+        <div className="flex gap-[10px]">
+          <div className="flex-1 min-w-0">
+            <SectionHeader label="Education" accent={accent} />
+            {content?.education?.[0] ? (
+              <>
+                <div className="font-semibold leading-none truncate" style={{ fontSize: 6.5, color: INK }}>{content.education[0].degree}</div>
+                <div className="mt-[1px] leading-none truncate" style={{ fontSize: 5.5, color: accent }}>{content.education[0].school}</div>
+              </>
+            ) : (
+              <>
+                <div className="h-[3px] w-[56%] rounded-full" style={{ backgroundColor: INK }} />
+                <div className="mt-[1px] h-[2px] w-[40%] rounded-full" style={{ backgroundColor: accent }} />
+              </>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <SectionHeader label="Skills" accent={accent} />
+            <div className="flex flex-wrap gap-[3px]">
+              {content?.skills && content.skills.length > 0
+                ? content.skills.slice(0, 5).map((s, i) => <SkillChip key={i} accent={accent} label={s} />)
+                : [26, 32, 22, 28, 24].map((w, i) => <SkillChip key={i} accent={accent} w={w} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── MINIMAL ────────────────────────────────────────────────────────────── */
+function MinimalLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+  return (
+    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "12px 13px 9px" }}>
+      {/* Centered header */}
+      <div className="text-center mb-[6px]">
+        <Name text={content?.name} size={13} tracking="-0.02em" />
+        <div className="mt-[2px] flex justify-center">
+          <Subtitle text={content?.title} size={6.5} color={INK_MUTED} tracking="0.01em" />
+        </div>
+        <div className="mt-[4px] flex justify-center">
+          <ContactRow
+            items={content?.email || content?.location ? [content.email, content.location].filter(Boolean) as string[] : ["email@example.com", "Phone", "Location"]}
+          />
+        </div>
+      </div>
+
+      {/* Thin accent rule */}
+      <div className="h-[1px] w-[40%] mx-auto mb-[7px]" style={{ backgroundColor: accent }} />
+
+      {/* Summary */}
+      {content?.summary ? (
+        <div className="mb-[6px]">
+          <BodyLine text={content.summary.slice(0, 140)} size={5.5} />
+          <div className="mt-[1px]"><BodyLine text={content.summary.slice(140, 260) || ' '} size={5.5} /></div>
+        </div>
+      ) : (
+        <div className="mb-[6px]">
+          <BodyBar />
+          <div className="mt-[2px]"><BodyBar w="w-11/12" /></div>
+          <div className="mt-[2px]"><BodyBar w="w-4/5" /></div>
+        </div>
+      )}
+
+      <HR color={RULE} />
+
+      {/* Experience */}
+      <div className="my-[6px]">
+        <SectionHeader label="Experience" accent={accent} />
+        {content?.experiences && content.experiences.length > 0 ? (
+          content.experiences.slice(0, 2).map((e, i) => <JobEntry key={i} accent={accent} exp={e} compact={i > 0} />)
+        ) : (
+          <>
+            <JobEntry accent={accent} />
+            <JobEntry accent={accent} compact />
+          </>
+        )}
+      </div>
+
+      <HR color={RULE} />
+
+      {/* Bottom two columns */}
+      <div className="flex gap-[10px] mt-[5px]">
+        <div className="flex-1 min-w-0">
+          <SectionHeader label="Education" accent={accent} rule={false} />
+          {content?.education?.[0] ? (
+            <>
+              <div className="font-semibold leading-none truncate" style={{ fontSize: 6.5, color: INK }}>{content.education[0].degree}</div>
+              <div className="mt-[1px] leading-none truncate" style={{ fontSize: 5.5, color: INK_MUTED }}>{content.education[0].school}</div>
+            </>
+          ) : (
+            <>
+              <div className="h-[3px] w-[56%] rounded-full" style={{ backgroundColor: INK }} />
+              <div className="mt-[1px] h-[2px] w-[40%] rounded-full" style={{ backgroundColor: INK_LIGHT }} />
+            </>
+          )}
+        </div>
+        <div className="w-px" style={{ backgroundColor: RULE }} />
+        <div className="flex-1 min-w-0">
+          <SectionHeader label="Skills" accent={accent} rule={false} />
+          <div className="flex flex-wrap gap-[3px]">
+            {content?.skills && content.skills.length > 0
+              ? content.skills.slice(0, 5).map((s, i) => <SkillChip key={i} accent={accent} label={s} />)
+              : [24, 30, 20, 26, 22].map((w, i) => <SkillChip key={i} accent={accent} w={w} />)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── CREATIVE ───────────────────────────────────────────────────────────── */
+function CreativeLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+  const initials = content?.name
+    ? content.name.split(/\s+/).map((n) => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
+    : "";
+  return (
+    <div className="w-full h-full flex bg-white">
+      {/* Left accent column */}
+      <div
+        className="w-[34%] h-full flex flex-col shrink-0"
+        style={{
+          background: `linear-gradient(180deg, ${accent} 0%, ${shadeColor(accent, -22)} 100%)`,
+          padding: "12px 7px 9px",
+        }}
+      >
+        <div className="w-[36px] h-[36px] rounded-full mx-auto mb-[6px] flex items-center justify-center text-white font-bold"
+          style={{ backgroundColor: "rgba(255,255,255,0.22)", fontSize: 11, border: "2px solid rgba(255,255,255,0.45)" }}>
+          {initials || "•"}
+        </div>
         {content?.name ? (
-          <div className="text-white font-bold text-center leading-none mb-[1px]" style={{ fontSize: 7.5 }}>
+          <div className="text-white text-center font-bold leading-tight mb-[2px] px-[2px]" style={{ fontSize: 8.5, letterSpacing: "-0.01em" }}>
             {content.name}
           </div>
         ) : (
-          <div className="h-[3px] w-[88%] rounded-full bg-white mx-auto mb-[2px]" />
+          <div className="h-[3px] w-[86%] rounded-full bg-white mx-auto mb-[2px]" />
         )}
         {content?.title ? (
-          <div className="text-white/75 text-center leading-tight mb-[5px] truncate" style={{ fontSize: 5.5 }}>
+          <div className="text-center leading-tight mb-[7px] px-[2px]" style={{ fontSize: 5.5, color: "rgba(255,255,255,0.75)" }}>
             {content.title}
           </div>
         ) : (
-          <div className="h-[2px] w-[65%] rounded-full bg-white/60 mx-auto mb-[5px]" />
+          <div className="h-[2px] w-[66%] rounded-full bg-white/60 mx-auto mb-[7px]" />
         )}
 
-        <div className="h-px bg-white/25 mb-[4px]" />
+        <div className="h-px bg-white/25 mb-[6px]" />
 
+        {/* About */}
+        <div className="mb-[6px]">
+          <div className="font-bold uppercase leading-none mb-[3px]" style={{ fontSize: 4.5, letterSpacing: "0.18em", color: "rgba(255,255,255,0.88)" }}>
+            About
+          </div>
+          {content?.summary ? (
+            <div className="leading-[1.4]" style={{ fontSize: 4.8, color: "rgba(255,255,255,0.82)" }}>
+              {content.summary.slice(0, 100)}{content.summary.length > 100 ? "…" : ""}
+            </div>
+          ) : (
+            <>
+              <div className="h-[1.5px] w-full rounded-full mb-[2px]" style={{ backgroundColor: "rgba(255,255,255,0.3)" }} />
+              <div className="h-[1.5px] w-4/5 rounded-full mb-[2px]" style={{ backgroundColor: "rgba(255,255,255,0.3)" }} />
+              <div className="h-[1.5px] w-full rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.3)" }} />
+            </>
+          )}
+        </div>
+
+        <div className="h-px bg-white/25 mb-[6px]" />
+
+        {/* Skills */}
         <div>
-          <div className="text-white/80 font-bold uppercase tracking-wider mb-[3px] leading-none" style={{ fontSize: 5, letterSpacing: "0.08em" }}>
-            Skills
+          <div className="font-bold uppercase leading-none mb-[3px]" style={{ fontSize: 4.5, letterSpacing: "0.18em", color: "rgba(255,255,255,0.88)" }}>
+            Expertise
           </div>
           {content?.skills && content.skills.length > 0 ? (
-            content.skills.slice(0, 6).map((s, i) => (
-              <div
-                key={i}
-                className="text-white/90 leading-none truncate mb-[2.5px]"
-                style={{ fontSize: 5.5 }}
-              >
-                {s}
-              </div>
+            content.skills.slice(0, 5).map((s, i) => (
+              <div key={i} className="leading-none truncate mb-[2.5px]" style={{ fontSize: 5.5, color: "rgba(255,255,255,0.94)" }}>{s}</div>
             ))
           ) : (
             [85, 70, 90, 60, 75].map((pct, i) => (
-              <div key={i} className="mb-[2.5px]">
-                <div className="h-[2.5px] w-full rounded-full bg-white/20">
-                  <div className="h-full rounded-full bg-white/75" style={{ width: `${pct}%` }} />
-                </div>
+              <div key={i} className="h-[2.5px] w-full rounded-full mb-[3px]" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}>
+                <div className="h-full rounded-full bg-white/80" style={{ width: `${pct}%` }} />
               </div>
             ))
           )}
         </div>
       </div>
 
-      <div className="flex-1 bg-white" style={{ padding: "8px 7px 6px" }}>
-        <div className="mb-[4px]">
-          <SectionHead accent={accent} style="bar" label={content?.experiences?.length ? "Experience" : undefined} />
+      {/* Right main content */}
+      <div className="flex-1" style={{ padding: "11px 10px 8px" }}>
+        {/* Experience */}
+        <div className="mb-[5px]">
+          <SectionHeader label="Experience" accent={accent} />
           {content?.experiences && content.experiences.length > 0 ? (
             content.experiences.slice(0, 2).map((e, i) => (
-              <div key={i} className="mb-[4px] pl-[3px] border-l-[2px]" style={{ borderColor: accent + "55" }}>
-                <div className="flex items-center justify-between gap-[3px]">
-                  <div className="font-semibold text-slate-800 leading-none truncate" style={{ fontSize: 6.5 }}>{e.role}</div>
-                  {e.dates && <div className="text-slate-500 leading-none shrink-0" style={{ fontSize: 5 }}>{e.dates}</div>}
+              <div key={i} className="mb-[5px] pl-[5px] border-l-[2px]" style={{ borderColor: accent }}>
+                <div className="flex items-center justify-between gap-[4px]">
+                  <div className="font-semibold leading-none truncate" style={{ fontSize: 7, color: INK }}>{e.role}</div>
+                  {e.dates && <div className="leading-none shrink-0" style={{ fontSize: 5, color: INK_LIGHT, fontStyle: "italic" }}>{e.dates}</div>}
                 </div>
-                <div className="text-slate-600 leading-none truncate mt-[1px]" style={{ fontSize: 5.5 }}>{e.company}</div>
+                <div className="leading-none truncate mt-[1px]" style={{ fontSize: 6, color: accent, fontWeight: 500 }}>{e.company}</div>
                 <div className="mt-[2px]">
-                  <Bullet accent={accent} w="w-full" />
-                  <Bullet accent={accent} w="w-5/6" />
+                  {e.bullets && e.bullets.length > 0 ? (
+                    e.bullets.slice(0, 2).map((b, j) => <BulletLine key={j} text={b} accent={accent} />)
+                  ) : (
+                    <>
+                      <BulletBar accent={accent} />
+                      <BulletBar accent={accent} w="w-5/6" />
+                    </>
+                  )}
                 </div>
               </div>
             ))
           ) : (
             [0, 1].map((j) => (
-              <div key={j} className="mb-[4px] pl-[3px] border-l-[2px]" style={{ borderColor: accent + "55" }}>
-                <div className="flex items-center justify-between mb-[1.5px]">
-                  <Bar w="w-[45%]" dark />
-                  <Bar w="w-[20%]" op={0.6} />
+              <div key={j} className="mb-[5px] pl-[5px] border-l-[2px]" style={{ borderColor: accent }}>
+                <div className="flex items-center justify-between mb-[1px]">
+                  <div className="h-[3px] w-[45%] rounded-full" style={{ backgroundColor: INK }} />
+                  <div className="h-[2px] w-[22%] rounded-full" style={{ backgroundColor: INK_LIGHT }} />
                 </div>
-                <Bar w="w-[32%]" op={0.6} />
+                <div className="h-[2.5px] w-[32%] rounded-full" style={{ backgroundColor: accent }} />
                 <div className="mt-[2px]">
-                  <Bullet accent={accent} w="w-full" />
-                  <Bullet accent={accent} w="w-5/6" />
-                  {j === 0 && <Bullet accent={accent} w="w-4/5" />}
+                  <BulletBar accent={accent} />
+                  <BulletBar accent={accent} w="w-5/6" />
                 </div>
               </div>
             ))
           )}
         </div>
-      </div>
-    </div>
-  );
-}
 
-/* ─── CENTERED ────────────────────────────────────────────────────────────── */
-function CenteredLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
-  return (
-    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "7px 9px 5px" }}>
-      <div className="h-[4px] w-full rounded-sm mb-[5px]" style={{ backgroundColor: accent }} />
-
-      <div className="text-center mb-[4px]">
-        {content?.name ? (
-          <div className="font-bold text-slate-900 leading-none mb-[2px]" style={{ fontSize: 11, letterSpacing: "-0.01em" }}>
-            {content.name}
-          </div>
-        ) : (
-          <div className="h-[6px] w-[52%] rounded-full mx-auto mb-[2.5px] bg-slate-800" />
-        )}
-        {content?.title ? (
-          <div className="font-medium leading-none mb-[3px] truncate" style={{ fontSize: 6.5, color: accent, opacity: 0.85 }}>
-            {content.title}
-          </div>
-        ) : (
-          <div className="h-[2.5px] w-[36%] rounded-full mx-auto mb-[3px]" style={{ backgroundColor: accent, opacity: 0.75 }} />
-        )}
-      </div>
-
-      <div className="flex items-center gap-[4px] mb-[4px]">
-        <div className="h-px flex-1 bg-slate-200" />
-        <div className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: accent }} />
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
-
-      <div className="mb-[4px]">
-        {content?.summary ? (
-          <BodyText text={content.summary.slice(0, 120) + (content.summary.length > 120 ? '…' : '')} size={5.5} />
-        ) : (
-          <>
-            <ThinBar w="w-full" />
-            <div className="mt-[1.5px]"><ThinBar w="w-11/12" /></div>
-            <div className="mt-[1.5px]"><ThinBar w="w-5/6" /></div>
-          </>
-        )}
-      </div>
-
-      <div className="mb-[4px]">
-        <div className="text-center mb-[2px]">
-          <div className="font-bold uppercase tracking-wider leading-none inline-block" style={{ fontSize: 5.5, color: accent, letterSpacing: "0.1em" }}>
-            Experience
+        {/* Education */}
+        <div>
+          <SectionHeader label="Education" accent={accent} />
+          <div className="pl-[5px] border-l-[2px]" style={{ borderColor: accent }}>
+            {content?.education?.[0] ? (
+              <>
+                <div className="font-semibold leading-none truncate" style={{ fontSize: 6.5, color: INK }}>{content.education[0].degree}</div>
+                <div className="mt-[1px] leading-none truncate" style={{ fontSize: 5.5, color: accent }}>{content.education[0].school}</div>
+              </>
+            ) : (
+              <>
+                <div className="h-[3px] w-[50%] rounded-full" style={{ backgroundColor: INK }} />
+                <div className="mt-[1px] h-[2px] w-[36%] rounded-full" style={{ backgroundColor: accent }} />
+              </>
+            )}
           </div>
         </div>
-        <div className="h-px w-full bg-slate-200 mb-[3px]" />
-        {content?.experiences && content.experiences.length > 0 ? (
-          content.experiences.slice(0, 2).map((e, i) => (
-            <JobEntry key={i} accent={accent} exp={e} bullets={2} />
-          ))
-        ) : (
-          <>
-            <JobEntry accent={accent} title="w-[40%]" date="w-[20%]" company="w-[30%]" bullets={2} />
-            <JobEntry accent={accent} title="w-[36%]" date="w-[18%]" company="w-[28%]" bullets={2} />
-          </>
-        )}
       </div>
     </div>
   );
 }
 
-/* ─── Router ──────────────────────────────────────────────────────────────── */
+/* ─── CENTERED ───────────────────────────────────────────────────────────── */
+function CenteredLayout({ accent, content }: { accent: string; content?: PreviewContent }) {
+  return (
+    <div className="w-full h-full bg-white flex flex-col" style={{ padding: "12px 13px 9px" }}>
+      {/* Centered header */}
+      <div className="text-center mb-[5px]">
+        <Name text={content?.name} size={13} tracking="-0.02em" />
+        <div className="mt-[3px] flex justify-center">
+          <Subtitle text={content?.title} size={7} color={accent} />
+        </div>
+        <div className="mt-[4px] flex justify-center">
+          <ContactRow
+            items={content?.email || content?.location ? [content.email, content.location].filter(Boolean) as string[] : ["email@example.com", "Phone", "Location"]}
+          />
+        </div>
+      </div>
+
+      {/* Decorative centre divider */}
+      <div className="flex items-center gap-[5px] mb-[6px]">
+        <div className="h-px flex-1" style={{ backgroundColor: RULE }} />
+        <div className="w-[4px] h-[4px] rounded-full" style={{ backgroundColor: accent }} />
+        <div className="h-px flex-1" style={{ backgroundColor: RULE }} />
+      </div>
+
+      {/* Summary */}
+      {content?.summary ? (
+        <div className="mb-[6px]">
+          <BodyLine text={content.summary.slice(0, 140)} size={5.5} />
+          <div className="mt-[1px]"><BodyLine text={content.summary.slice(140, 260) || ' '} size={5.5} /></div>
+        </div>
+      ) : (
+        <div className="mb-[6px]">
+          <BodyBar />
+          <div className="mt-[2px]"><BodyBar w="w-11/12" /></div>
+          <div className="mt-[2px]"><BodyBar w="w-5/6" /></div>
+        </div>
+      )}
+
+      {/* Experience */}
+      <div className="mb-[6px]">
+        <SectionHeader label="Experience" accent={accent} center />
+        {content?.experiences && content.experiences.length > 0 ? (
+          content.experiences.slice(0, 2).map((e, i) => <JobEntry key={i} accent={accent} exp={e} compact={i > 0} />)
+        ) : (
+          <>
+            <JobEntry accent={accent} />
+            <JobEntry accent={accent} compact />
+          </>
+        )}
+      </div>
+
+      {/* Two-column footer */}
+      <div className="flex gap-[10px]">
+        <div className="flex-1 min-w-0">
+          <SectionHeader label="Education" accent={accent} center />
+          {content?.education?.[0] ? (
+            <div className="text-center">
+              <div className="font-semibold leading-none truncate" style={{ fontSize: 6.5, color: INK }}>{content.education[0].degree}</div>
+              <div className="mt-[1px] leading-none truncate" style={{ fontSize: 5.5, color: INK_MUTED }}>{content.education[0].school}</div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <div className="h-[3px] w-[56%] rounded-full" style={{ backgroundColor: INK }} />
+              <div className="mt-[1px] h-[2px] w-[40%] rounded-full" style={{ backgroundColor: INK_LIGHT }} />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <SectionHeader label="Skills" accent={accent} center />
+          <div className="flex flex-wrap justify-center gap-[3px]">
+            {content?.skills && content.skills.length > 0
+              ? content.skills.slice(0, 5).map((s, i) => <SkillChip key={i} accent={accent} label={s} />)
+              : [24, 30, 20, 26, 22].map((w, i) => <SkillChip key={i} accent={accent} w={w} />)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Helpers ───────────────────────────────────────────────────────────── */
+
+/** Shade a hex color by percent (negative = darker, positive = lighter). */
+function shadeColor(hex: string, percent: number): string {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return hex;
+  const num = parseInt(clean, 16);
+  let r = (num >> 16) + Math.round((percent / 100) * 255);
+  let g = ((num >> 8) & 0x00ff) + Math.round((percent / 100) * 255);
+  let b = (num & 0x0000ff) + Math.round((percent / 100) * 255);
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
+}
+
+/* ─── Router ─────────────────────────────────────────────────────────────── */
 export function TemplatePreview({
   layout,
   accent,
@@ -887,9 +880,6 @@ export function TemplatePreview({
   accent: string;
   content?: PreviewContent;
 }) {
-  // Render the selected layout; if anything throws (e.g. unexpected content
-  // shape), fall back to the generic placeholder version rather than bubbling
-  // the error up to the nearest error boundary.
   try {
     switch (layout) {
       case "classic":   return <ClassicLayout accent={accent} content={content} />;
