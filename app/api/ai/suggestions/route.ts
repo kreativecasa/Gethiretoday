@@ -42,6 +42,10 @@ export async function POST(req: Request) {
     if (!jobTitle) {
       return NextResponse.json({ error: 'jobTitle is required' }, { status: 400 });
     }
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('AI suggestions: ANTHROPIC_API_KEY is not configured');
+      return NextResponse.json({ error: 'AI is temporarily unavailable. Please try again shortly.' }, { status: 503 });
+    }
 
     const cfg = PROMPTS[type];
     const message = await getAnthropicClient().messages.create({
@@ -51,8 +55,8 @@ export async function POST(req: Request) {
       messages: [{ role: 'user', content: cfg.user(jobTitle) }],
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
+    const content = message.content?.[0];
+    if (!content || content.type !== 'text') {
       return NextResponse.json({ error: 'Unexpected AI response type' }, { status: 500 });
     }
 

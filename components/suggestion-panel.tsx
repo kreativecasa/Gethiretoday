@@ -29,19 +29,32 @@ const DEFAULTS: Record<SuggestionType, { heading: string; subheading: string; em
   bullets: {
     heading: 'Expert-written examples',
     subheading: 'Pick bullets that match your experience, then edit them.',
-    emptyJobTitle: 'Enter a job title above to see pre-written bullet suggestions',
+    emptyJobTitle: 'Start typing a job title below — or pick a popular role to see expert bullet examples.',
   },
   skills: {
     heading: 'Top skills for this role',
     subheading: 'Add the skills that match your background.',
-    emptyJobTitle: 'Enter a job title to see suggested skills',
+    emptyJobTitle: 'Start typing a job title below — or pick a popular role to see recommended skills.',
   },
   summary: {
     heading: 'Pre-written summary examples',
     subheading: 'Pick one and edit to make it yours.',
-    emptyJobTitle: 'Enter a job title in your work experience to see summary suggestions',
+    emptyJobTitle: 'Start typing a job title below — or pick a popular role to see summary examples.',
   },
 };
+
+// Common roles to seed the AI when no job title is entered yet.
+// Clicking one auto-fills the search and loads suggestions.
+const POPULAR_TITLES = [
+  'Software Engineer',
+  'Product Manager',
+  'Marketing Manager',
+  'Data Analyst',
+  'Customer Success',
+  'Sales Representative',
+  'Graphic Designer',
+  'Project Manager',
+] as const;
 
 export function SuggestionPanel({
   type,
@@ -104,11 +117,17 @@ export function SuggestionPanel({
     } catch {}
   }, []);
 
-  // Auto-load on mount / when jobTitle changes
+  // Auto-load on mount / when jobTitle changes.
+  // When the job title is cleared, also clear stale suggestions so the panel
+  // doesn't show results that no longer match what the user is editing.
   useEffect(() => {
     if (jobTitle.trim()) {
       fetchSuggestions(jobTitle);
       fetchRelated(jobTitle);
+    } else {
+      setSuggestions([]);
+      setRelatedTitles([]);
+      setError(null);
     }
   }, [jobTitle, fetchSuggestions, fetchRelated]);
 
@@ -201,9 +220,25 @@ export function SuggestionPanel({
         </div>
       )}
 
-      {!jobTitle.trim() && suggestions.length === 0 && (
-        <div className="text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-lg px-3 py-4 text-center">
-          {d.emptyJobTitle}
+      {!jobTitle.trim() && !searchTitle.trim() && suggestions.length === 0 && !loading && (
+        <div className="rounded-lg bg-slate-50 border border-dashed border-slate-200 px-3 py-3">
+          <div className="text-xs text-slate-600 mb-2">{d.emptyJobTitle}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {POPULAR_TITLES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setSearchTitle(t);
+                  fetchSuggestions(t);
+                  fetchRelated(t);
+                }}
+                className="text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:border-[#4AB7A6] hover:text-[#4AB7A6] rounded-full px-2.5 py-1 transition-colors"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

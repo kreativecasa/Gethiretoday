@@ -138,6 +138,13 @@ const TEMPLATES: { id: Template; label: string; isPro: boolean; layout: Template
   { id: 'split-accent', label: 'Split Accent',  isPro: true,  layout: 'split-accent', accent: '#7c3aed' },
 ];
 
+// Templates that have a visible photo / avatar slot in their layout.
+// Used to conditionally show the Profile Photo upload in the Contact editor
+// so the form stays in sync with the preview (no stale photo when you switch
+// to a template that has no image slot).
+const PHOTO_TEMPLATES: readonly Template[] = ['modern', 'photo-card'] as const;
+const templateSupportsPhoto = (t: Template) => PHOTO_TEMPLATES.includes(t);
+
 const SECTIONS = [
   { id: 'contact',       label: 'Contact',        Icon: User },
   { id: 'summary',       label: 'Summary',         Icon: FileText },
@@ -935,12 +942,27 @@ function ContactSection({
     reader.readAsDataURL(file);
   };
 
+  const showPhoto = templateSupportsPhoto(template as Template);
+
   return (
     <div>
       <SectionHeader title="Contact Information" />
 
-      {/* Photo upload */}
-      {(
+      {/* Photo upload — only shown for templates that actually render a photo.
+          When the user switches to a non-photo template, this block is hidden
+          so the editor stays in sync with the preview. The photo_url stays in
+          state, so switching back restores the uploaded image. */}
+      {!showPhoto && data.contact.photo_url && (
+        <div className="mb-4 flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2.5 rounded-lg">
+          <Camera className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-600" />
+          <span>
+            The <span className="font-semibold capitalize">{template}</span> template
+            doesn&apos;t display a profile photo. Your uploaded photo is saved — switch
+            to <span className="font-semibold">Modern</span> or <span className="font-semibold">Photo Card</span> to show it.
+          </span>
+        </div>
+      )}
+      {showPhoto && (
         <div className="mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <FieldLabel>Profile Photo</FieldLabel>
           <div className="flex items-center gap-4 mt-1">
@@ -1034,7 +1056,7 @@ function SummarySection({
   return (
     <div>
       <SectionHeader title="Professional Summary" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5">
         {/* Left: Your summary */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -1237,7 +1259,7 @@ function ExperienceSection({
             </div>
 
             {/* Achievements with side-by-side AI suggestions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
               <div>
                 <FieldLabel>Key Achievements / Bullets</FieldLabel>
                 <div className="space-y-1.5">
@@ -1451,7 +1473,7 @@ function SkillsSection({
   return (
     <div>
       <SectionHeader title="Skills" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5">
         {/* Left: user skills */}
         <div>
           <FieldLabel>Your Skills</FieldLabel>

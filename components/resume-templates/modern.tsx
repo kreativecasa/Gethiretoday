@@ -43,12 +43,21 @@ export default function ModernTemplate({ data, colorScheme = 'teal', fontSize = 
 
       {/* SIDEBAR */}
       <div style={{ width: '72mm', background: `linear-gradient(175deg, ${c.sidebar} 0%, ${c.sidebarDark} 100%)`, color: '#fff', padding: '16mm 8mm 16mm', display: 'flex', flexDirection: 'column' as const, flexShrink: 0 }}>
-        {/* Avatar circle */}
-        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: `${c.accent}60`, border: '3px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>
-            {(d.contact.full_name || 'U').charAt(0).toUpperCase()}
-          </span>
-        </div>
+        {/* Avatar — real uploaded photo if provided, else initial fallback */}
+        {d.contact.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={d.contact.photo_url}
+            alt={d.contact.full_name || 'Profile'}
+            style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.4)', marginBottom: '12px', display: 'block' }}
+          />
+        ) : (
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: `${c.accent}60`, border: '3px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>
+              {(d.contact.full_name || 'U').charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
 
         {/* Name */}
         <div style={{ fontSize: fs.xl, fontWeight: 800, color: '#fff', lineHeight: 1.15, marginBottom: '3px' }}>{d.contact.full_name || 'Your Name'}</div>

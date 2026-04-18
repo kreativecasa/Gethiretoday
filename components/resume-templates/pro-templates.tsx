@@ -395,9 +395,18 @@ export function PhotoCardTemplate({ data, colorScheme = 'blue', fontSize = 'medi
     <div id="resume-preview" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Inter, Arial, sans-serif', background: '#fff', color: '#111827', boxSizing: 'border-box' }}>
       {/* Header card */}
       <div style={{ padding: '16mm 18mm 14mm', display: 'flex', alignItems: 'center', gap: '18px', borderBottom: `1px solid #e5e7eb` }}>
-        <div style={{ width: '90px', height: '90px', borderRadius: '16px', background: `linear-gradient(135deg, ${c.accent} 0%, ${c.dark} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '38px', fontWeight: 700, boxShadow: `0 8px 16px ${c.accent}30`, flexShrink: 0 }}>
-          {initialsOf(d.contact.full_name || 'Your Name')}
-        </div>
+        {d.contact.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={d.contact.photo_url}
+            alt={d.contact.full_name || 'Profile'}
+            style={{ width: '90px', height: '90px', borderRadius: '16px', objectFit: 'cover', boxShadow: `0 8px 16px ${c.accent}30`, flexShrink: 0, display: 'block' }}
+          />
+        ) : (
+          <div style={{ width: '90px', height: '90px', borderRadius: '16px', background: `linear-gradient(135deg, ${c.accent} 0%, ${c.dark} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '38px', fontWeight: 700, boxShadow: `0 8px 16px ${c.accent}30`, flexShrink: 0 }}>
+            {initialsOf(d.contact.full_name || 'Your Name')}
+          </div>
+        )}
         <div>
           <h1 style={{ fontSize: fs.name, fontWeight: 800, color: c.dark, margin: 0, letterSpacing: '-0.02em', lineHeight: 1 }}>{d.contact.full_name || 'Your Name'}</h1>
           <div style={{ fontSize: fs.xl, color: c.accent, fontWeight: 600, marginTop: '6px' }}>{d.work_experience[0]?.job_title}</div>
