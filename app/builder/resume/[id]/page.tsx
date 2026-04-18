@@ -643,27 +643,20 @@ export default function ResumeBuilderPage() {
 
         {/* ── Design controls group ── */}
         <div className="hidden sm:flex items-center gap-3 border border-gray-200 rounded-xl px-3 py-1.5 bg-gray-50">
-          {/* Template — prominent pill selector */}
+          {/* Template — compact dropdown (14 templates would overflow as pills) */}
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Template</span>
-            <div className="flex gap-1">
+            <select
+              value={template}
+              onChange={(e) => handleTemplateChange(e.target.value as Template)}
+              className="text-xs font-semibold bg-white border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+            >
               {TEMPLATES.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => handleTemplateChange(t.id)}
-                  title={t.isPro ? `${t.label} (PRO)` : t.label}
-                  className={`relative px-2.5 py-1 text-xs font-semibold rounded-lg transition-all border ${
-                    template === t.id
-                      ? 'text-white border-teal-600 shadow-sm'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-teal-400 hover:text-teal-600'
-                  }`}
-                  style={template === t.id ? { backgroundColor: '#0d9488' } : {}}
-                >
-                  {t.label}
-                  {t.isPro && <span className="ml-1 text-[8px] font-bold opacity-70">PRO</span>}
-                </button>
+                <option key={t.id} value={t.id}>
+                  {t.label}{t.isPro ? ' (PRO)' : ''}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           <div className="w-px h-4 bg-gray-300" />
