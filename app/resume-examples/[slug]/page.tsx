@@ -1,10 +1,17 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, CheckCircle, Lightbulb, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Lightbulb, Sparkles, Eye } from 'lucide-react';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import { RESUME_EXAMPLES, getExampleBySlug } from '@/lib/resume-examples-data';
+import { exampleToResumeData } from '@/lib/example-to-resume';
+import ClassicTemplate from '@/components/resume-templates/classic';
+import ModernTemplate from '@/components/resume-templates/modern';
+import ExecutiveTemplate from '@/components/resume-templates/executive';
+import CreativeTemplate from '@/components/resume-templates/creative';
+import MinimalTemplate from '@/components/resume-templates/minimal';
+import SimpleTemplate from '@/components/resume-templates/simple';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -29,10 +36,52 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// Map industry → a best-fit template to showcase the example
+function pickTemplate(industry: string): { key: string; color: string } {
+  const i = industry.toLowerCase();
+  if (i.includes('technology')) return { key: 'modern', color: 'blue' };
+  if (i.includes('creative') || i.includes('design')) return { key: 'creative', color: 'purple' };
+  if (i.includes('executive') || i.includes('finance')) return { key: 'executive', color: 'slate' };
+  if (i.includes('academic') || i.includes('education')) return { key: 'minimal', color: 'blue' };
+  if (i.includes('healthcare')) return { key: 'classic', color: 'teal' };
+  return { key: 'classic', color: 'teal' };
+}
+
+// Render the chosen template at full size, but scale it visually to fit inside
+// a card using a CSS transform (wrapper sets a width, inner template is always A4).
+function ExampleResumeRender({ tpl, resumeData }: { tpl: { key: string; color: string }; resumeData: ReturnType<typeof exampleToResumeData> }) {
+  const props = { data: resumeData, colorScheme: tpl.color, fontSize: 'medium' as const };
+  switch (tpl.key) {
+    case 'modern':    return <ModernTemplate {...props} />;
+    case 'creative':  return <CreativeTemplate {...props} />;
+    case 'executive': return <ExecutiveTemplate {...props} />;
+    case 'minimal':   return <MinimalTemplate {...props} />;
+    case 'simple':    return <SimpleTemplate {...props} />;
+    default:          return <ClassicTemplate {...props} />;
+  }
+}
+
 export default async function ExamplePage({ params }: Props) {
   const { slug } = await params;
   const ex = getExampleBySlug(slug);
   if (!ex) notFound();
+
+  const tpl = pickTemplate(ex.industry);
+  const resumeData = exampleToResumeData(ex);
+  // Inject a plausible fake name & contact so the rendered resume reads as a real person
+  // (the example data itself keeps contact fields empty for the builder pre-fill).
+  const displayData = {
+    ...resumeData,
+    contact: {
+      full_name: `${ex.title.split(/\s+/).slice(-1)[0]} Sample`.replace(/^[^A-Z]/, 'A'),
+      email: 'candidate@example.com',
+      phone: '+1 (555) 123-4567',
+      location: 'San Francisco, CA',
+      linkedin: `linkedin.com/in/${ex.slug}`,
+      website: '',
+      github: '',
+    },
+  };
 
   const schema = {
     "@context": "https://schema.org",
@@ -50,32 +99,55 @@ export default async function ExamplePage({ params }: Props) {
 
       <main className="flex-1">
         {/* Breadcrumb + hero */}
-        <section className="bg-gradient-to-b from-[var(--teal-50)] to-white py-12">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Link href="/resume-examples" className="inline-flex items-center gap-1.5 text-sm text-teal hover:underline mb-6">
+        <section className="bg-gradient-to-b from-[var(--teal-50)] to-white py-10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link href="/resume-examples" className="inline-flex items-center gap-1.5 text-sm text-teal hover:underline mb-5">
               <ArrowLeft className="w-4 h-4" /> Back to all examples
             </Link>
 
-            <div className="flex items-start gap-4 mb-6">
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${ex.gradient} flex-shrink-0`} />
+            <div className="flex items-start gap-4 mb-4">
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${ex.gradient} flex-shrink-0`} />
               <div>
                 <span className="text-xs font-semibold text-teal uppercase tracking-wider">{ex.industry} · {ex.level}</span>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-1">{ex.title} Resume Example</h1>
               </div>
             </div>
 
-            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">{ex.intro}</p>
+            <p className="text-base text-gray-600 leading-relaxed max-w-2xl">{ex.intro}</p>
+          </div>
+        </section>
 
-            <div className="flex flex-wrap gap-2 mt-6">
-              {ex.skills.map((s) => (
-                <span key={s} className="text-sm bg-white border border-[var(--teal-200)] text-teal px-3 py-1 rounded-full font-medium">{s}</span>
-              ))}
+        {/* ─── Rendered resume example ─────────────────────────────────── */}
+        <section className="py-12 bg-slate-50 border-y border-slate-100">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-teal uppercase tracking-wider">
+                <Eye className="w-4 h-4" />
+                Full Example Resume
+              </div>
+              <Link
+                href={`/builder/resume/new?example=${ex.slug}`}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold rounded-full px-4 py-2 text-white"
+                style={{ backgroundColor: '#4AB7A6' }}
+              >
+                Use this example <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
+            {/* Paper container: A4 aspect, horizontally scrollable on very narrow mobile */}
+            <div className="bg-white shadow-xl mx-auto overflow-auto border border-slate-200 rounded-lg"
+              style={{ maxWidth: '794px', maxHeight: '1120px' }}
+            >
+              <div style={{ minWidth: '794px' }}>
+                <ExampleResumeRender tpl={tpl} resumeData={displayData} />
+              </div>
+            </div>
+            <p className="text-xs text-center text-slate-400 mt-4">
+              Example candidate • Replace with your own details in the builder
+            </p>
           </div>
         </section>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-
           {/* Sample summary */}
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">

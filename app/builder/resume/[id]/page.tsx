@@ -41,6 +41,16 @@ import MinimalTemplate from '@/components/resume-templates/minimal';
 import ExecutiveTemplate from '@/components/resume-templates/executive';
 import CreativeTemplate from '@/components/resume-templates/creative';
 import SimpleTemplate from '@/components/resume-templates/simple';
+import {
+  BoldHeaderTemplate,
+  SplitRightTemplate,
+  TimelineTemplate,
+  MonoTemplate,
+  PhotoCardTemplate,
+  CompactTemplate,
+  SerifTemplate,
+  SplitAccentTemplate,
+} from '@/components/resume-templates/pro-templates';
 import { createClient } from '@/lib/supabase';
 
 import { generateId } from '@/lib/utils';
@@ -92,15 +102,27 @@ const COLOR_OPTIONS = [
 
 type ColorScheme = (typeof COLOR_OPTIONS)[number]['id'];
 type FontSize = 'small' | 'medium' | 'large';
-type Template = 'classic' | 'modern' | 'minimal' | 'executive' | 'creative' | 'simple';
+type Template =
+  | 'classic' | 'modern' | 'minimal' | 'executive' | 'creative' | 'simple'
+  | 'bold-header' | 'split-right' | 'timeline' | 'mono'
+  | 'photo-card' | 'compact' | 'serif' | 'split-accent';
 
 const TEMPLATES: { id: Template; label: string; isPro: boolean }[] = [
-  { id: 'classic',   label: 'Classic',   isPro: false },
-  { id: 'modern',    label: 'Modern',    isPro: true  },
-  { id: 'minimal',   label: 'Minimal',   isPro: true  },
-  { id: 'executive', label: 'Executive', isPro: true  },
-  { id: 'creative',  label: 'Creative',  isPro: true  },
-  { id: 'simple',    label: 'Simple',    isPro: true  },
+  { id: 'classic',      label: 'Classic',       isPro: false },
+  { id: 'modern',       label: 'Modern',        isPro: true  },
+  { id: 'minimal',      label: 'Minimal',       isPro: true  },
+  { id: 'executive',    label: 'Executive',     isPro: true  },
+  { id: 'creative',     label: 'Creative',      isPro: true  },
+  { id: 'simple',       label: 'Simple',        isPro: true  },
+  // New pro templates
+  { id: 'bold-header',  label: 'Bold Header',   isPro: true  },
+  { id: 'split-right',  label: 'Split Right',   isPro: true  },
+  { id: 'timeline',     label: 'Timeline',      isPro: true  },
+  { id: 'mono',         label: 'Mono',          isPro: true  },
+  { id: 'photo-card',   label: 'Photo Card',    isPro: true  },
+  { id: 'compact',      label: 'Compact ATS',   isPro: true  },
+  { id: 'serif',        label: 'Elegant Serif', isPro: true  },
+  { id: 'split-accent', label: 'Split Accent',  isPro: true  },
 ];
 
 const SECTIONS = [
@@ -199,6 +221,7 @@ export default function ResumeBuilderPage() {
   const [bulletsLoading, setBulletsLoading] = useState<Record<string, boolean>>({});
   const [newSkillName, setNewSkillName] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingWord, setDownloadingWord] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [isPro, setIsPro] = useState(false);
@@ -386,6 +409,40 @@ export default function ResumeBuilderPage() {
     }
   };
 
+  // ----- Word (.doc) download — pro-gated, uses /api/resume/[id]/word -----
+  const handleDownloadWord = async () => {
+    if (!isPro) {
+      setProPrompt(true);
+      setTimeout(() => setProPrompt(false), 4000);
+      return;
+    }
+    setDownloadingWord(true);
+    try {
+      const res = await fetch(`/api/resume/${resumeId}/word`);
+      if (!res.ok) {
+        const msg = res.status === 403 ? 'Word download is a Pro feature.' : 'Failed to generate Word file.';
+        setAiError(msg);
+        setTimeout(() => setAiError(null), 5000);
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${resumeTitle || 'resume'}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Word download failed', err);
+      setAiError('Word download failed. Please try again.');
+      setTimeout(() => setAiError(null), 5000);
+    } finally {
+      setDownloadingWord(false);
+    }
+  };
+
   // ----- AI: Generate Summary -----
   const handleGenerateSummary = async () => {
     setSummaryLoading(true);
@@ -457,11 +514,19 @@ export default function ResumeBuilderPage() {
 
   const renderTemplate = () => {
     const props = { data: resumeData, colorScheme, fontSize };
-    if (template === 'modern')    return <ModernTemplate {...props} />;
-    if (template === 'minimal')   return <MinimalTemplate {...props} />;
-    if (template === 'executive') return <ExecutiveTemplate {...props} />;
-    if (template === 'creative')  return <CreativeTemplate {...props} />;
-    if (template === 'simple')    return <SimpleTemplate {...props} />;
+    if (template === 'modern')       return <ModernTemplate {...props} />;
+    if (template === 'minimal')      return <MinimalTemplate {...props} />;
+    if (template === 'executive')    return <ExecutiveTemplate {...props} />;
+    if (template === 'creative')     return <CreativeTemplate {...props} />;
+    if (template === 'simple')       return <SimpleTemplate {...props} />;
+    if (template === 'bold-header')  return <BoldHeaderTemplate {...props} />;
+    if (template === 'split-right')  return <SplitRightTemplate {...props} />;
+    if (template === 'timeline')     return <TimelineTemplate {...props} />;
+    if (template === 'mono')         return <MonoTemplate {...props} />;
+    if (template === 'photo-card')   return <PhotoCardTemplate {...props} />;
+    if (template === 'compact')      return <CompactTemplate {...props} />;
+    if (template === 'serif')        return <SerifTemplate {...props} />;
+    if (template === 'split-accent') return <SplitAccentTemplate {...props} />;
     return <ClassicTemplate {...props} />;
   };
 
@@ -647,6 +712,19 @@ export default function ResumeBuilderPage() {
               PRO template — Upgrade to download
             </a>
           )}
+          <button
+            onClick={handleDownloadWord}
+            disabled={downloadingWord}
+            title={isPro ? 'Download as Word (.doc)' : 'Word download — Pro only'}
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:border-teal-400 hover:text-teal-700 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 bg-white transition-colors"
+          >
+            {downloadingWord
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <FileText className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{downloadingWord ? 'Generating…' : 'Download Word'}</span>
+            <span className="sm:hidden">{downloadingWord ? '…' : 'Word'}</span>
+            {!isPro && <span className="text-[9px] font-bold bg-amber-100 text-amber-700 px-1 py-0.5 rounded ml-0.5">PRO</span>}
+          </button>
           <button
             onClick={handleDownload}
             disabled={downloadingPdf}

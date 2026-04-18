@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, ArrowRight, Check, Loader2 } from "lucide-react";
 import { TemplatePreview } from "@/components/template-preview";
 
-type Category = "All" | "Professional" | "Modern" | "Creative" | "Simple" | "Executive" | "Academic";
-type LayoutType = "classic" | "sidebar" | "executive" | "minimal" | "creative" | "centered";
+type Category = "All" | "Professional" | "Modern" | "Creative" | "Simple" | "Executive" | "Academic" | "Tech";
+type LayoutType =
+  | "classic" | "sidebar" | "executive" | "minimal" | "creative" | "centered"
+  | "bold-header" | "split-right" | "timeline" | "mono"
+  | "photo-card" | "compact" | "serif" | "split-accent";
 
-const categories: Category[] = ["All","Professional","Modern","Creative","Simple","Executive","Academic"];
+const categories: Category[] = ["All","Professional","Modern","Creative","Simple","Executive","Academic","Tech"];
 
 interface Template {
   id: number;
@@ -23,36 +27,83 @@ interface Template {
 }
 
 const templates: Template[] = [
-  { id: 1,  templateId: "classic",   name: "Classic Professional", category: "Professional", accent: "#4AB7A6", bg: "#f0fdf9", layout: "classic",   pro: false, description: "Clean, ATS-friendly single-column" },
-  { id: 2,  templateId: "modern",    name: "Modern Sidebar",       category: "Modern",       accent: "#1e293b", bg: "#f8fafc", layout: "sidebar",   pro: false, description: "Two-column with dark sidebar" },
-  { id: 3,  templateId: "executive", name: "Executive Bold",       category: "Executive",    accent: "#0f172a", bg: "#f8fafc", layout: "executive", pro: true,  description: "Authoritative dark header" },
-  { id: 4,  templateId: "creative",  name: "Creative Spectrum",    category: "Creative",     accent: "#7c3aed", bg: "#faf5ff", layout: "creative",  pro: true,  description: "Side-column with photo" },
-  { id: 5,  templateId: "minimal",   name: "Academic Harvard",     category: "Academic",     accent: "#1d4ed8", bg: "#eff6ff", layout: "minimal",   pro: false, description: "Traditional centered header" },
-  { id: 6,  templateId: "classic",   name: "Contemporary Teal",    category: "Professional", accent: "#0d9488", bg: "#f0fdfa", layout: "classic",   pro: false, description: "Fresh teal accent line" },
-  { id: 7,  templateId: "modern",    name: "Tech Engineer",        category: "Modern",       accent: "#4338ca", bg: "#eef2ff", layout: "sidebar",   pro: false, description: "Indigo sidebar for tech roles" },
-  { id: 8,  templateId: "classic",   name: "Healthcare Pro",       category: "Professional", accent: "#059669", bg: "#ecfdf5", layout: "classic",   pro: false, description: "Clean green accents" },
-  { id: 9,  templateId: "executive", name: "Sales Star",           category: "Professional", accent: "#ea580c", bg: "#fff7ed", layout: "executive", pro: false, description: "Bold orange impact header" },
-  { id: 10, templateId: "simple",    name: "Graduate Fresh",       category: "Simple",       accent: "#0891b2", bg: "#ecfeff", layout: "centered",  pro: false, description: "Simple centered design" },
-  { id: 11, templateId: "creative",  name: "Creative Bold",        category: "Creative",     accent: "#e11d48", bg: "#fff1f2", layout: "creative",  pro: true,  description: "Vibrant rose side-column" },
-  { id: 12, templateId: "executive", name: "Corporate Elite",      category: "Executive",    accent: "#1f2937", bg: "#f9fafb", layout: "executive", pro: true,  description: "Prestige dark header" },
-  { id: 13, templateId: "modern",    name: "Marketing Master",     category: "Professional", accent: "#db2777", bg: "#fdf2f8", layout: "sidebar",   pro: false, description: "Pink sidebar for creatives" },
-  { id: 14, templateId: "classic",   name: "Finance Pro",          category: "Executive",    accent: "#1e3a8a", bg: "#eff6ff", layout: "classic",   pro: true,  description: "Navy precision lines" },
-  { id: 15, templateId: "minimal",   name: "Teacher Edition",      category: "Simple",       accent: "#d97706", bg: "#fffbeb", layout: "minimal",   pro: false, description: "Warm amber minimal style" },
-  { id: 16, templateId: "classic",   name: "Legal Professional",   category: "Executive",    accent: "#334155", bg: "#f8fafc", layout: "classic",   pro: true,  description: "Slate formal structure" },
-  { id: 17, templateId: "modern",    name: "Startup Founder",      category: "Modern",       accent: "#7c3aed", bg: "#faf5ff", layout: "sidebar",   pro: true,  description: "Purple modern sidebar" },
-  { id: 18, templateId: "modern",    name: "Data Scientist",       category: "Professional", accent: "#0891b2", bg: "#ecfeff", layout: "sidebar",   pro: false, description: "Cyan analytical layout" },
-  { id: 19, templateId: "executive", name: "Project Manager",      category: "Professional", accent: "#0f766e", bg: "#f0fdfa", layout: "executive", pro: false, description: "Teal executive presence" },
-  { id: 20, templateId: "simple",    name: "HR Specialist",        category: "Simple",       accent: "#ec4899", bg: "#fdf2f8", layout: "centered",  pro: false, description: "Soft pink centered style" },
-  { id: 21, templateId: "classic",   name: "Consulting Pro",       category: "Executive",    accent: "#374151", bg: "#f9fafb", layout: "classic",   pro: true,  description: "Grey elite consulting" },
-  { id: 22, templateId: "classic",   name: "Nurse Practitioner",   category: "Professional", accent: "#10b981", bg: "#ecfdf5", layout: "classic",   pro: false, description: "Emerald healthcare clean" },
-  { id: 23, templateId: "creative",  name: "Designer Portfolio",   category: "Creative",     accent: "#6d28d9", bg: "#f5f3ff", layout: "creative",  pro: true,  description: "Violet creative sidebar" },
-  { id: 24, templateId: "modern",    name: "Real Estate Agent",    category: "Professional", accent: "#c2410c", bg: "#fff7ed", layout: "sidebar",   pro: false, description: "Orange warm sidebar" },
+  { id: 1,  templateId: "classic",      name: "Classic Professional", category: "Professional", accent: "#4AB7A6", bg: "#f0fdf9", layout: "classic",      pro: false, description: "Clean, ATS-friendly single-column" },
+  { id: 2,  templateId: "modern",       name: "Modern Sidebar",       category: "Modern",       accent: "#1e293b", bg: "#f8fafc", layout: "sidebar",      pro: false, description: "Two-column with dark sidebar" },
+  { id: 3,  templateId: "executive",    name: "Executive Bold",       category: "Executive",    accent: "#0f172a", bg: "#f8fafc", layout: "executive",    pro: true,  description: "Authoritative dark header" },
+  { id: 4,  templateId: "creative",     name: "Creative Spectrum",    category: "Creative",     accent: "#7c3aed", bg: "#faf5ff", layout: "creative",     pro: true,  description: "Side-column with photo" },
+  { id: 5,  templateId: "minimal",      name: "Academic Harvard",     category: "Academic",     accent: "#1d4ed8", bg: "#eff6ff", layout: "minimal",      pro: false, description: "Traditional centered header" },
+  { id: 6,  templateId: "classic",      name: "Contemporary Teal",    category: "Professional", accent: "#0d9488", bg: "#f0fdfa", layout: "classic",      pro: false, description: "Fresh teal accent line" },
+  { id: 7,  templateId: "modern",       name: "Tech Engineer",        category: "Modern",       accent: "#4338ca", bg: "#eef2ff", layout: "sidebar",      pro: false, description: "Indigo sidebar for tech roles" },
+  { id: 8,  templateId: "classic",      name: "Healthcare Pro",       category: "Professional", accent: "#059669", bg: "#ecfdf5", layout: "classic",      pro: false, description: "Clean green accents" },
+  { id: 9,  templateId: "executive",    name: "Sales Star",           category: "Professional", accent: "#ea580c", bg: "#fff7ed", layout: "executive",    pro: false, description: "Bold orange impact header" },
+  { id: 10, templateId: "simple",       name: "Graduate Fresh",       category: "Simple",       accent: "#0891b2", bg: "#ecfeff", layout: "centered",     pro: false, description: "Simple centered design" },
+  { id: 11, templateId: "creative",     name: "Creative Bold",        category: "Creative",     accent: "#e11d48", bg: "#fff1f2", layout: "creative",     pro: true,  description: "Vibrant rose side-column" },
+  { id: 12, templateId: "executive",    name: "Corporate Elite",      category: "Executive",    accent: "#1f2937", bg: "#f9fafb", layout: "executive",    pro: true,  description: "Prestige dark header" },
+
+  // ── 8 new pro templates ─────────────────────────────────────────────────
+  { id: 25, templateId: "bold-header",  name: "Bold Impact",          category: "Executive",    accent: "#4AB7A6", bg: "#f0fdfa", layout: "bold-header",  pro: true,  description: "Dark hero band with accent bar" },
+  { id: 26, templateId: "split-right",  name: "Corporate Right",      category: "Professional", accent: "#1d4ed8", bg: "#eff6ff", layout: "split-right",  pro: true,  description: "Clean right-sidebar layout" },
+  { id: 27, templateId: "timeline",     name: "Journey Timeline",     category: "Modern",       accent: "#7c3aed", bg: "#faf5ff", layout: "timeline",     pro: true,  description: "Vertical career timeline" },
+  { id: 28, templateId: "mono",         name: "Engineer Console",     category: "Tech",         accent: "#0d9488", bg: "#ecfdf5", layout: "mono",         pro: true,  description: "Monospace, code-inspired" },
+  { id: 29, templateId: "photo-card",   name: "Portfolio Card",       category: "Creative",     accent: "#2563eb", bg: "#eff6ff", layout: "photo-card",   pro: true,  description: "Gradient avatar card header" },
+  { id: 30, templateId: "compact",      name: "Compact ATS",          category: "Professional", accent: "#475569", bg: "#f8fafc", layout: "compact",      pro: true,  description: "Ultra-dense, ATS-optimized" },
+  { id: 31, templateId: "serif",        name: "Elegant Serif",        category: "Academic",     accent: "#9f1239", bg: "#fff1f2", layout: "serif",        pro: true,  description: "Refined serif typography" },
+  { id: 32, templateId: "split-accent", name: "Aurora Split",         category: "Creative",     accent: "#7c3aed", bg: "#f5f3ff", layout: "split-accent", pro: true,  description: "Gradient accent with floating card" },
+
+  // Existing remaining free/pro
+  { id: 13, templateId: "modern",       name: "Marketing Master",     category: "Professional", accent: "#db2777", bg: "#fdf2f8", layout: "sidebar",      pro: false, description: "Pink sidebar for creatives" },
+  { id: 14, templateId: "classic",      name: "Finance Pro",          category: "Executive",    accent: "#1e3a8a", bg: "#eff6ff", layout: "classic",      pro: true,  description: "Navy precision lines" },
+  { id: 15, templateId: "minimal",      name: "Teacher Edition",      category: "Simple",       accent: "#d97706", bg: "#fffbeb", layout: "minimal",      pro: false, description: "Warm amber minimal style" },
+  { id: 16, templateId: "classic",      name: "Legal Professional",   category: "Executive",    accent: "#334155", bg: "#f8fafc", layout: "classic",      pro: true,  description: "Slate formal structure" },
+  { id: 17, templateId: "modern",       name: "Startup Founder",      category: "Modern",       accent: "#7c3aed", bg: "#faf5ff", layout: "sidebar",      pro: true,  description: "Purple modern sidebar" },
+  { id: 18, templateId: "modern",       name: "Data Scientist",       category: "Tech",         accent: "#0891b2", bg: "#ecfeff", layout: "sidebar",      pro: false, description: "Cyan analytical layout" },
+  { id: 19, templateId: "executive",    name: "Project Manager",      category: "Professional", accent: "#0f766e", bg: "#f0fdfa", layout: "executive",    pro: false, description: "Teal executive presence" },
+  { id: 20, templateId: "simple",       name: "HR Specialist",        category: "Simple",       accent: "#ec4899", bg: "#fdf2f8", layout: "centered",     pro: false, description: "Soft pink centered style" },
+  { id: 21, templateId: "classic",      name: "Consulting Pro",       category: "Executive",    accent: "#374151", bg: "#f9fafb", layout: "classic",      pro: true,  description: "Grey elite consulting" },
+  { id: 22, templateId: "classic",      name: "Nurse Practitioner",   category: "Professional", accent: "#10b981", bg: "#ecfdf5", layout: "classic",      pro: false, description: "Emerald healthcare clean" },
+  { id: 23, templateId: "creative",     name: "Designer Portfolio",   category: "Creative",     accent: "#6d28d9", bg: "#f5f3ff", layout: "creative",     pro: true,  description: "Violet creative sidebar" },
+  { id: 24, templateId: "modern",       name: "Real Estate Agent",    category: "Professional", accent: "#c2410c", bg: "#fff7ed", layout: "sidebar",      pro: false, description: "Orange warm sidebar" },
 ];
 
 export default function TemplatesView() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [search, setSearch] = useState("");
   const [showFreeOnly, setShowFreeOnly] = useState(false);
+  const [creatingTemplate, setCreatingTemplate] = useState<number | null>(null);
+
+  // "Use Template" — creates a new resume with starter data already filled in,
+  // then routes directly to the full builder at /builder/resume/[id].
+  const handleUseTemplate = async (t: Template) => {
+    setCreatingTemplate(t.id);
+    try {
+      // Lazy-load the starter data generator (client-only, keeps bundle small).
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getTemplateStarterData } = require("@/lib/example-to-resume") as typeof import("@/lib/example-to-resume");
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${t.name} Resume`,
+          template_id: t.templateId,
+          data: getTemplateStarterData(),
+        }),
+      });
+      if (res.status === 401) {
+        router.push(`/login?redirect=/dashboard/templates`);
+        return;
+      }
+      if (res.ok) {
+        const { resume } = await res.json();
+        router.push(`/builder/resume/${resume.id}?template=${t.templateId}`);
+        return;
+      }
+    } catch {
+      // Fall through to /new?template= as a graceful degradation.
+    }
+    router.push(`/builder/resume/new?template=${t.templateId}`);
+    setCreatingTemplate(null);
+  };
 
   const filtered = templates.filter((t) => {
     const matchesCategory = activeCategory === "All" || t.category === activeCategory;
@@ -171,14 +222,19 @@ export default function TemplatesView() {
 
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
-                      <Link
-                        href={`/builder/resume/new?template=${template.templateId}`}
-                        className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 bg-white font-semibold rounded-full px-5 py-2 text-sm shadow-lg"
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleUseTemplate(template); }}
+                        disabled={creatingTemplate === template.id}
+                        className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 bg-white font-semibold rounded-full px-5 py-2 text-sm shadow-lg flex items-center gap-1.5 disabled:opacity-70"
                         style={{ color: '#4AB7A6' }}
-                        onClick={(e) => e.stopPropagation()}
                       >
-                        Use Template →
-                      </Link>
+                        {creatingTemplate === template.id ? (
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening…</>
+                        ) : (
+                          <>Use Template →</>
+                        )}
+                      </button>
                     </div>
 
                     {/* PRO badge */}

@@ -13,7 +13,7 @@ function getClient(): Anthropic {
   return getAnthropicClient();
 }
 
-const MODEL = 'claude-opus-4-5';
+const MODEL = 'claude-haiku-4-5-20251001';
 
 export async function generateSummary(
   jobTitle: string,

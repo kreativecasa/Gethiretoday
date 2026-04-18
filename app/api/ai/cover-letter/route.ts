@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       : 'relevant experience';
 
     const message = await getAnthropicClient().messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 800,
       system: `You are a professional cover letter writer. Write a compelling cover letter body consisting of exactly 3 paragraphs. Do NOT include a salutation, greeting, closing, or signature — only the body paragraphs. ${toneInstruction} Be specific to the company and role. Avoid generic filler phrases. Return only the 3 body paragraphs separated by blank lines.`,
       messages: [{

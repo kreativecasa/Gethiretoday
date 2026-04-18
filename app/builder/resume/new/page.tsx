@@ -202,18 +202,21 @@ function ResumeEditorInner() {
   const template = searchParams.get("template") || "classic";
   const exampleSlug = searchParams.get("example");
 
-  // Pre-fill from the example when ?example=slug is passed.
+  // Pre-fill from the example when ?example=slug is passed,
+  // OR with a generic starter when only ?template= is passed,
+  // OR with an empty resume if neither is present.
   const initialResume: ResumeData = (() => {
-    if (!exampleSlug) return DEFAULT_RESUME;
     try {
-      // Dynamic require keeps this out of the initial server bundle;
-      // these modules are client-safe (pure data + pure fns).
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { RESUME_EXAMPLES } = require("@/lib/resume-examples-data") as typeof import("@/lib/resume-examples-data");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { exampleToResumeData } = require("@/lib/example-to-resume") as typeof import("@/lib/example-to-resume");
-      const found = RESUME_EXAMPLES.find((e) => e.slug === exampleSlug);
-      if (found) return exampleToResumeData(found);
+      const { exampleToResumeData, getTemplateStarterData } = require("@/lib/example-to-resume") as typeof import("@/lib/example-to-resume");
+      if (exampleSlug) {
+        const found = RESUME_EXAMPLES.find((e) => e.slug === exampleSlug);
+        if (found) return exampleToResumeData(found);
+      }
+      // Template was selected without an example — give a polished starter.
+      if (searchParams.get("template")) return getTemplateStarterData();
     } catch {}
     return DEFAULT_RESUME;
   })();

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     const message = await getAnthropicClient().messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
       system:
         'You are a professional resume coach with deep knowledge of industry skill requirements. Return a list of skills — one per line, no numbering, no bullets, no extra text. Include a mix of technical hard skills and relevant soft skills. Return only the skills, nothing else.',

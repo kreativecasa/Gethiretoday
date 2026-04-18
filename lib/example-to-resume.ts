@@ -1,6 +1,82 @@
-import type { ResumeData, WorkExperience, Skill } from '@/types';
+import type { ResumeData, WorkExperience, Skill, Education } from '@/types';
 import type { ResumeExample } from './resume-examples-data';
 import type { PreviewContent } from '@/components/template-preview';
+
+/**
+ * A generic "starter" resume used when the user picks a template from the
+ * Templates page without selecting a specific example. Gives them a polished
+ * pre-filled resume they can immediately see in the chosen layout, then edit.
+ */
+export function getTemplateStarterData(): ResumeData {
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  return {
+    contact: {
+      full_name: 'Your Name',
+      email: 'your.email@example.com',
+      phone: '+1 (555) 123-4567',
+      location: 'City, State',
+      linkedin: 'linkedin.com/in/yourname',
+      website: '',
+      github: '',
+    },
+    summary:
+      'Results-oriented professional with a track record of delivering measurable impact across cross-functional teams. Replace this with 2-3 sentences that highlight your unique strengths, experience level, and what you bring to your next role.',
+    work_experience: [
+      {
+        id: `exp-${Date.now()}-1`,
+        job_title: 'Your Most Recent Role',
+        company: 'Company Name',
+        location: 'City, State',
+        start_date: `${thisYear - 2}-01`,
+        end_date: '',
+        is_current: true,
+        description: '',
+        achievements: [
+          'Led initiative that drove X% improvement in key metric (replace with your own win)',
+          'Built and shipped feature used by Y+ customers, generating $Z in new revenue',
+          'Collaborated across engineering, design, and product to deliver quarterly goals',
+        ],
+      },
+      {
+        id: `exp-${Date.now()}-2`,
+        job_title: 'Previous Role',
+        company: 'Previous Company',
+        location: '',
+        start_date: `${thisYear - 4}-06`,
+        end_date: `${thisYear - 2}-01`,
+        is_current: false,
+        description: '',
+        achievements: [
+          'Owned end-to-end delivery of feature/project with measurable outcome',
+          'Reduced process time by X% through automation or workflow redesign',
+        ],
+      },
+    ],
+    education: [
+      {
+        id: `edu-${Date.now()}`,
+        degree: 'Bachelor of Science',
+        field_of_study: 'Your Major',
+        institution: 'University Name',
+        location: '',
+        start_date: `${thisYear - 8}-09`,
+        end_date: `${thisYear - 4}-05`,
+        is_current: false,
+        gpa: '',
+        description: '',
+      } as Education,
+    ],
+    skills: ['Leadership', 'Project Management', 'Communication', 'Problem Solving', 'Data Analysis', 'Collaboration'].map(
+      (name, i): Skill => ({ id: `skill-${i}`, name, category: 'Core' }),
+    ),
+    certifications: [],
+    languages: [],
+    volunteer_work: [],
+    projects: [],
+    custom_sections: [],
+  };
+}
 
 /**
  * Convert a ResumeExample (marketing/examples data) into PreviewContent for

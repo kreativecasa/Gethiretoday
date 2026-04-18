@@ -32,12 +32,20 @@ import type { TemplateLayout } from '@/components/template-preview';
 import { createClient } from '@/lib/supabase';
 
 const TEMPLATE_META: Record<string, { layout: TemplateLayout; accent: string }> = {
-  classic:   { layout: 'classic',   accent: '#4AB7A6' },
-  modern:    { layout: 'sidebar',   accent: '#1e293b' },
-  minimal:   { layout: 'minimal',   accent: '#1d4ed8' },
-  executive: { layout: 'executive', accent: '#0f172a' },
-  creative:  { layout: 'creative',  accent: '#7c3aed' },
-  simple:    { layout: 'centered',  accent: '#0891b2' },
+  classic:        { layout: 'classic',      accent: '#4AB7A6' },
+  modern:         { layout: 'sidebar',      accent: '#1e293b' },
+  minimal:        { layout: 'minimal',      accent: '#1d4ed8' },
+  executive:      { layout: 'executive',    accent: '#0f172a' },
+  creative:       { layout: 'creative',     accent: '#7c3aed' },
+  simple:         { layout: 'centered',     accent: '#0891b2' },
+  'bold-header':  { layout: 'bold-header',  accent: '#4AB7A6' },
+  'split-right':  { layout: 'split-right',  accent: '#1d4ed8' },
+  timeline:       { layout: 'timeline',     accent: '#7c3aed' },
+  mono:           { layout: 'mono',         accent: '#0d9488' },
+  'photo-card':   { layout: 'photo-card',   accent: '#2563eb' },
+  compact:        { layout: 'compact',      accent: '#475569' },
+  serif:          { layout: 'serif',        accent: '#9f1239' },
+  'split-accent': { layout: 'split-accent', accent: '#7c3aed' },
 };
 
 interface ResumeRow {
