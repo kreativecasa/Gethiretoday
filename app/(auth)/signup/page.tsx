@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Eye, EyeOff, Loader2, Check, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check, Zap, Mail, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -130,6 +130,15 @@ function SignupForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [passwordValue, setPasswordValue] = useState('');
+  // When Supabase has email confirmation enabled, signUp() returns a user but
+  // no session. We surface a dedicated "check your inbox" state so the user is
+  // never left wondering why they can't log in.
+  const [pendingConfirmation, setPendingConfirmation] = useState<{
+    email: string;
+  } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [resendCooldownUntil, setResendCooldownUntil] = useState<number>(0);
 
   useEffect(() => {
     if (searchParams.get('plan') === 'pro') {
@@ -161,11 +170,26 @@ function SignupForm() {
       password: values.password,
       options: {
         data: { full_name: values.fullName },
+        // Send the user back to our auth callback after they click the
+        // confirmation link. The callback exchanges the code for a session
+        // and redirects to /dashboard.
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
     if (error) {
       setServerError(error.message);
+      return;
+    }
+
+    // If Supabase has email confirmation enabled, signUp() returns a user
+    // without a session. The old flow redirected to /dashboard which silently
+    // kicked the user back to /login — now we show a clear "check your
+    // inbox" state with a resend button so the user always knows what to do.
+    if (data.user && !data.session) {
+      setPendingConfirmation({ email: values.email });
+      // Light 60-second cooldown to discourage hammering the resend button
+      setResendCooldownUntil(Date.now() + 60_000);
       return;
     }
 
@@ -195,6 +219,45 @@ function SignupForm() {
     }, 1500);
   };
 
+  // Resend the signup confirmation email for a user who hasn't confirmed yet.
+  // Rate-limited to once per 60 seconds on the client to match Supabase's own
+  // server-side throttle (which otherwise returns an unhelpful error).
+  const handleResendConfirmation = async () => {
+    if (!pendingConfirmation) return;
+    if (Date.now() < resendCooldownUntil) {
+      const secs = Math.ceil((resendCooldownUntil - Date.now()) / 1000);
+      setResendMessage({ kind: 'err', text: `Please wait ${secs}s before resending.` });
+      return;
+    }
+
+    setResending(true);
+    setResendMessage(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: pendingConfirmation.email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    setResending(false);
+    if (error) {
+      setResendMessage({
+        kind: 'err',
+        text: error.message || 'Could not resend. Please try again in a moment.',
+      });
+      return;
+    }
+
+    setResendMessage({
+      kind: 'ok',
+      text: 'Confirmation email re-sent. Please check your inbox (and spam folder).',
+    });
+    setResendCooldownUntil(Date.now() + 60_000);
+  };
+
   const handleGoogleSignUp = async () => {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
@@ -219,6 +282,103 @@ function SignupForm() {
           <p className="text-slate-500 text-sm mt-1">Taking you to your dashboard…</p>
         </div>
         <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#4AB7A6' }} />
+      </div>
+    );
+  }
+
+  // Shown when Supabase requires the user to click a link in their email
+  // before the account is active. Clear, explicit, resendable — no more silent
+  // "nothing happens after signup".
+  if (pendingConfirmation) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#f0fdf9' }}
+          >
+            <Mail className="w-8 h-8" style={{ color: '#4AB7A6' }} />
+          </div>
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-900">Check your inbox</h1>
+          <p className="mt-2 text-slate-600 text-sm leading-relaxed">
+            We just sent a confirmation link to{' '}
+            <span className="font-semibold text-slate-900">{pendingConfirmation.email}</span>.
+            Click the link to activate your account and start building your resume.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
+          <p className="font-semibold text-slate-800 mb-1">
+            Can&apos;t find it? Here&apos;s what to do:
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              Check your <span className="font-semibold">Spam</span> or{' '}
+              <span className="font-semibold">Junk</span> folder — the email may have landed there.
+            </li>
+            <li>
+              Look for a sender like{' '}
+              <span className="font-mono">noreply@gethiretoday.com</span> (or a Supabase address if
+              custom SMTP isn&apos;t configured yet).
+            </li>
+            <li>
+              Double-check the email address above. If it&apos;s wrong, click &ldquo;Use a different
+              email&rdquo; below.
+            </li>
+          </ul>
+        </div>
+
+        {resendMessage && (
+          <div
+            className={`p-3 rounded-xl text-sm border ${
+              resendMessage.kind === 'ok'
+                ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                : 'bg-red-50 border-red-100 text-red-600'
+            }`}
+          >
+            {resendMessage.text}
+          </div>
+        )}
+
+        <Button
+          type="button"
+          onClick={handleResendConfirmation}
+          disabled={resending || Date.now() < resendCooldownUntil}
+          className="w-full h-12 rounded-full text-white font-medium"
+          style={{ backgroundColor: '#4AB7A6' }}
+        >
+          {resending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Resending…
+            </>
+          ) : (
+            'Resend confirmation email'
+          )}
+        </Button>
+
+        <div className="flex items-center justify-between text-sm">
+          <button
+            type="button"
+            onClick={() => {
+              setPendingConfirmation(null);
+              setResendMessage(null);
+            }}
+            className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Use a different email
+          </button>
+          <Link
+            href="/login"
+            className="font-semibold"
+            style={{ color: '#4AB7A6' }}
+          >
+            Already confirmed? Log in →
+          </Link>
+        </div>
       </div>
     );
   }

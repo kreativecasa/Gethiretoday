@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +45,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // When Supabase returns "Email not confirmed", we capture the email so we
+  // can offer the user a one-click "Resend confirmation email" button. Much
+  // better than a cryptic error that offers no path forward.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+  const [resendCooldownUntil, setResendCooldownUntil] = useState<number>(0);
 
   const {
     register,
@@ -56,6 +63,8 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
+    setUnconfirmedEmail(null);
+    setResendMessage(null);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: values.email,
@@ -63,6 +72,23 @@ export default function LoginPage() {
     });
 
     if (error) {
+      // Supabase returns "Email not confirmed" (and sometimes status 400 with
+      // `email_not_confirmed` code) when the user never clicked the
+      // confirmation link. Detect that specifically and offer a resend action
+      // inline, instead of just showing a dead-end error message.
+      const raw = error.message ?? '';
+      const isUnconfirmed =
+        /email not confirmed/i.test(raw) ||
+        /email_not_confirmed/i.test(raw) ||
+        // Supabase older message variant
+        /confirm your email/i.test(raw);
+
+      if (isUnconfirmed) {
+        setUnconfirmedEmail(values.email);
+        setServerError(null);
+        return;
+      }
+
       setServerError(error.message);
       return;
     }
@@ -74,6 +100,43 @@ export default function LoginPage() {
 
     router.push('/dashboard');
     router.refresh();
+  };
+
+  // Resend the signup confirmation email. Rate-limited client-side to align
+  // with Supabase's own 60s throttle.
+  const handleResendConfirmation = async () => {
+    if (!unconfirmedEmail) return;
+    if (Date.now() < resendCooldownUntil) {
+      const secs = Math.ceil((resendCooldownUntil - Date.now()) / 1000);
+      setResendMessage({ kind: 'err', text: `Please wait ${secs}s before resending.` });
+      return;
+    }
+
+    setResending(true);
+    setResendMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: unconfirmedEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setResending(false);
+
+    if (error) {
+      setResendMessage({
+        kind: 'err',
+        text: error.message || 'Could not resend. Please try again in a moment.',
+      });
+      return;
+    }
+
+    setResendMessage({
+      kind: 'ok',
+      text: 'Confirmation email re-sent. Please check your inbox (and spam folder).',
+    });
+    setResendCooldownUntil(Date.now() + 60_000);
   };
 
   const handleGoogleSignIn = async () => {
@@ -130,6 +193,60 @@ export default function LoginPage() {
         {serverError && (
           <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
             {serverError}
+          </div>
+        )}
+
+        {/* Unconfirmed-email state — shown when login fails because the user
+            hasn't clicked their confirmation link yet. Gives them a clear
+            path forward instead of a dead-end error. */}
+        {unconfirmedEmail && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: '#fffbeb' }}
+              >
+                <Mail className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-900">
+                  Please confirm your email first
+                </p>
+                <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                  We sent a confirmation link to{' '}
+                  <span className="font-semibold">{unconfirmedEmail}</span>. Click the link in that
+                  email, then come back and sign in. Check your spam folder if you don&apos;t see
+                  it.
+                </p>
+              </div>
+            </div>
+
+            {resendMessage && (
+              <div
+                className={`text-xs font-medium ${
+                  resendMessage.kind === 'ok' ? 'text-emerald-700' : 'text-red-600'
+                }`}
+              >
+                {resendMessage.text}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resending || Date.now() < resendCooldownUntil}
+              variant="outline"
+              className="w-full h-10 rounded-full border-amber-300 bg-white text-amber-800 hover:bg-amber-100 text-sm font-semibold"
+            >
+              {resending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                  Resending…
+                </>
+              ) : (
+                'Resend confirmation email'
+              )}
+            </Button>
           </div>
         )}
 
