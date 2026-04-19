@@ -1,6 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { NextResponse } from 'next/server';
-import type { ResumeData, WorkExperience, Education, Skill } from '@/types';
+import { isProActive } from '@/lib/subscription';
+import type {
+  ResumeData,
+  WorkExperience,
+  Education,
+  Skill,
+  Certification,
+  Language,
+  VolunteerWork,
+  Project,
+  CustomSection,
+} from '@/types';
 
 /**
  * Word (.doc) download for a resume.
@@ -9,6 +20,12 @@ import type { ResumeData, WorkExperience, Education, Skill } from '@/types';
  * Microsoft Word opens HTML-based .doc files natively, preserving most
  * formatting. This avoids requiring a heavy docx library while still giving
  * users a real Word-editable file.
+ *
+ * Important: this renderer must write out every section the builder supports
+ * (contact, summary, work, education, skills, projects, certifications,
+ * languages, volunteer work, custom sections). Previously it silently
+ * dropped volunteer_work and custom_sections, which users rightly reported
+ * as "missing data" on download.
  */
 
 function esc(s: string): string {
@@ -22,83 +39,190 @@ function formatDate(d?: string): string {
   return d ? esc(d) : '';
 }
 
+function dateRange(start?: string, end?: string, isCurrent?: boolean): string {
+  if (isCurrent) {
+    return `${formatDate(start)} – Present`;
+  }
+  if (start && end) {
+    return `${formatDate(start)} – ${formatDate(end)}`;
+  }
+  if (start) return formatDate(start);
+  if (end) return formatDate(end);
+  return '';
+}
+
 function renderHtml(title: string, data: ResumeData): string {
   const c = data.contact ?? ({} as ResumeData['contact']);
   const name = c.full_name || title || 'Resume';
 
+  // Contact line — same fields used by the visual templates.
   const contactLine = [c.email, c.phone, c.location, c.linkedin, c.website, c.github]
     .filter(Boolean)
     .map((v) => esc(v as string))
     .join(' · ');
 
+  // Optional profile photo (appears at top-right if set). Base64 data URIs
+  // embed directly; http(s) URLs are inlined via <img src>.
+  const photoHtml = c.photo_url
+    ? `<img src="${esc(c.photo_url)}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:50%;float:right;margin-left:16px;" />`
+    : '';
+
+  // ── Work experience ──
   const workHtml = (data.work_experience ?? [])
     .map(
       (j: WorkExperience) => `
-<h3 style="margin:14px 0 2px;font-size:14px;">${esc(j.job_title)}</h3>
-<div style="font-size:11px;color:#666;">
-  <span>${esc(j.company)}${j.location ? ` · ${esc(j.location)}` : ''}</span>
-  <span style="float:right;">${formatDate(j.start_date)}${j.end_date ? ` – ${formatDate(j.end_date)}` : j.is_current ? ' – Present' : ''}</span>
-</div>
-<div style="clear:both;"></div>
-${j.description ? `<p style="font-size:12px;margin:4px 0;">${esc(j.description)}</p>` : ''}
-${
-  j.achievements && j.achievements.length
-    ? `<ul style="margin:6px 0 0 0;padding-left:20px;">${j.achievements.map((b) => `<li style="font-size:12px;margin-bottom:2px;">${esc(b)}</li>`).join('')}</ul>`
-    : ''
-}`
+<div style="page-break-inside:avoid;margin-top:12px;">
+  <h3 style="margin:0 0 2px;font-size:14px;">${esc(j.job_title || '')}</h3>
+  <div style="font-size:11px;color:#666;">
+    <span>${esc(j.company || '')}${j.location ? ` · ${esc(j.location)}` : ''}</span>
+    <span style="float:right;">${dateRange(j.start_date, j.end_date, j.is_current)}</span>
+  </div>
+  <div style="clear:both;"></div>
+  ${j.description ? `<p style="font-size:12px;margin:4px 0;">${esc(j.description)}</p>` : ''}
+  ${
+    j.achievements && j.achievements.length
+      ? `<ul style="margin:6px 0 0 0;padding-left:20px;">${j.achievements
+          .filter(Boolean)
+          .map((b) => `<li style="font-size:12px;margin-bottom:2px;">${esc(b)}</li>`)
+          .join('')}</ul>`
+      : ''
+  }
+</div>`
     )
     .join('');
 
+  // ── Education (now renders GPA, description, and "Present" for is_current) ──
   const eduHtml = (data.education ?? [])
     .map(
       (e: Education) => `
-<div style="margin:6px 0;">
-  <div style="font-weight:bold;font-size:13px;">${esc(e.degree)}${e.field_of_study ? ` in ${esc(e.field_of_study)}` : ''}</div>
+<div style="margin:8px 0;page-break-inside:avoid;">
+  <div style="font-weight:bold;font-size:13px;">${esc(e.degree || '')}${e.field_of_study ? ` in ${esc(e.field_of_study)}` : ''}</div>
   <div style="font-size:11px;color:#666;">
-    ${esc(e.institution)}${e.location ? ` · ${esc(e.location)}` : ''}
-    <span style="float:right;">${formatDate(e.start_date)}${e.end_date ? ` – ${formatDate(e.end_date)}` : ''}</span>
+    ${esc(e.institution || '')}${e.location ? ` · ${esc(e.location)}` : ''}
+    <span style="float:right;">${dateRange(e.start_date, e.end_date, e.is_current)}</span>
   </div>
   <div style="clear:both;"></div>
+  ${e.gpa ? `<div style="font-size:11px;color:#666;">GPA: ${esc(e.gpa)}</div>` : ''}
+  ${e.description ? `<p style="font-size:12px;margin:2px 0 0;">${esc(e.description)}</p>` : ''}
 </div>`
     )
     .join('');
 
-  const skillsHtml =
-    data.skills && data.skills.length
-      ? `<p style="font-size:12px;line-height:1.6;">${data.skills.map((s: Skill) => esc(s.name)).join(' · ')}</p>`
-      : '';
+  // ── Skills (now renders level + category grouping) ──
+  // Group by category when any skill has one; otherwise plain comma list.
+  const skills = (data.skills ?? []).filter((s) => s.name);
+  const hasCategories = skills.some((s) => s.category && s.category.trim());
+  let skillsHtml = '';
+  if (skills.length) {
+    if (hasCategories) {
+      const byCategory: Record<string, Skill[]> = {};
+      for (const s of skills) {
+        const key = (s.category || 'Other').trim();
+        (byCategory[key] = byCategory[key] || []).push(s);
+      }
+      skillsHtml = Object.entries(byCategory)
+        .map(
+          ([cat, items]) =>
+            `<p style="font-size:12px;margin:4px 0;"><strong>${esc(cat)}:</strong> ${items
+              .map((s) => `${esc(s.name)}${s.level ? ` (${esc(s.level)})` : ''}`)
+              .join(' · ')}</p>`
+        )
+        .join('');
+    } else {
+      skillsHtml = `<p style="font-size:12px;line-height:1.6;">${skills
+        .map((s) => `${esc(s.name)}${s.level ? ` (${esc(s.level)})` : ''}`)
+        .join(' · ')}</p>`;
+    }
+  }
 
-  const certsHtml =
-    data.certifications && data.certifications.length
-      ? `<ul style="margin:4px 0 0 0;padding-left:20px;">${data.certifications
-          .map((c) => `<li style="font-size:12px;margin-bottom:2px;"><strong>${esc(c.name)}</strong>${c.issuer ? ` — ${esc(c.issuer)}` : ''}${c.date_issued ? ` (${esc(c.date_issued)})` : ''}</li>`)
-          .join('')}</ul>`
-      : '';
+  // ── Certifications ──
+  const certsHtml = (data.certifications ?? []).length
+    ? `<ul style="margin:4px 0 0 0;padding-left:20px;">${data
+        .certifications!.map(
+          (cert: Certification) => `
+<li style="font-size:12px;margin-bottom:4px;">
+  <strong>${esc(cert.name || '')}</strong>${cert.issuer ? ` — ${esc(cert.issuer)}` : ''}
+  ${cert.date_issued ? ` (${esc(cert.date_issued)}${cert.expiry_date ? ` – ${esc(cert.expiry_date)}` : ''})` : ''}
+  ${cert.credential_id ? `<br/><span style="color:#666;">ID: ${esc(cert.credential_id)}</span>` : ''}
+  ${cert.url ? ` <a href="${esc(cert.url)}">${esc(cert.url)}</a>` : ''}
+</li>`
+        )
+        .join('')}</ul>`
+    : '';
 
-  const projectsHtml =
-    data.projects && data.projects.length
-      ? data.projects
-          .map(
-            (p) => `
-<div style="margin:6px 0;">
-  <div style="font-weight:bold;font-size:13px;">${esc(p.name)}</div>
-  ${p.description ? `<div style="font-size:12px;color:#666;">${esc(p.description)}</div>` : ''}
+  // ── Projects (now renders url, technologies, dates) ──
+  const projectsHtml = (data.projects ?? [])
+    .map(
+      (p: Project) => `
+<div style="margin:8px 0;page-break-inside:avoid;">
+  <div style="font-weight:bold;font-size:13px;">
+    ${esc(p.name || '')}${p.url ? ` <span style="font-weight:normal;font-size:11px;color:#4AB7A6;">· ${esc(p.url)}</span>` : ''}
+    ${
+      p.start_date || p.end_date
+        ? `<span style="float:right;font-weight:normal;font-size:11px;color:#666;">${dateRange(p.start_date, p.end_date, false)}</span>`
+        : ''
+    }
+  </div>
+  <div style="clear:both;"></div>
+  ${p.description ? `<p style="font-size:12px;color:#444;margin:4px 0;">${esc(p.description)}</p>` : ''}
+  ${
+    p.technologies && p.technologies.length
+      ? `<p style="font-size:11px;color:#666;margin:2px 0 0;"><strong>Tech:</strong> ${p.technologies.map((t) => esc(t)).join(', ')}</p>`
+      : ''
+  }
 </div>`
-          )
-          .join('')
-      : '';
+    )
+    .join('');
 
-  const langsHtml =
-    data.languages && data.languages.length
-      ? `<p style="font-size:12px;">${data.languages
-          .map((l) => `${esc(l.name)}${l.proficiency ? ` (${esc(l.proficiency)})` : ''}`)
-          .join(' · ')}</p>`
-      : '';
+  // ── Languages ──
+  const langsHtml = (data.languages ?? []).length
+    ? `<p style="font-size:12px;">${data
+        .languages!.filter((l: Language) => l.name)
+        .map((l) => `${esc(l.name)}${l.proficiency ? ` (${esc(l.proficiency)})` : ''}`)
+        .join(' · ')}</p>`
+    : '';
 
-  const section = (label: string, content: string) =>
-    content
-      ? `<h2 style="margin:18px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4AB7A6;border-bottom:1px solid #4AB7A6;padding-bottom:2px;">${label}</h2>${content}`
-      : '';
+  // ── Volunteer work (previously dropped — now rendered) ──
+  const volunteerHtml = (data.volunteer_work ?? [])
+    .map(
+      (v: VolunteerWork) => `
+<div style="margin:8px 0;page-break-inside:avoid;">
+  <div style="font-weight:bold;font-size:13px;">${esc(v.role || '')}</div>
+  <div style="font-size:11px;color:#666;">
+    <span>${esc(v.organization || '')}</span>
+    <span style="float:right;">${dateRange(v.start_date, v.end_date, v.is_current)}</span>
+  </div>
+  <div style="clear:both;"></div>
+  ${v.description ? `<p style="font-size:12px;margin:4px 0;">${esc(v.description)}</p>` : ''}
+</div>`
+    )
+    .join('');
+
+  // ── Custom sections (previously dropped — now rendered) ──
+  const customHtml = (data.custom_sections ?? [])
+    .filter((cs) => cs.items && cs.items.length)
+    .map(
+      (cs: CustomSection) => `
+${renderSection(
+  cs.title || 'Additional',
+  cs.items
+    .map(
+      (item) => `
+<div style="margin:6px 0;page-break-inside:avoid;">
+  <div style="font-weight:bold;font-size:13px;">
+    ${esc(item.title || '')}
+    ${item.date ? `<span style="float:right;font-weight:normal;font-size:11px;color:#666;">${esc(item.date)}</span>` : ''}
+  </div>
+  <div style="clear:both;"></div>
+  ${item.subtitle ? `<div style="font-size:11px;color:#666;">${esc(item.subtitle)}</div>` : ''}
+  ${item.description ? `<p style="font-size:12px;margin:4px 0;">${esc(item.description)}</p>` : ''}
+</div>`
+    )
+    .join('')
+)}
+`
+    )
+    .join('');
 
   return `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -122,20 +246,31 @@ ${
     h2 { page-break-after: avoid; }
     h3 { page-break-after: avoid; }
     ul { page-break-inside: avoid; }
+    a { color: #4AB7A6; text-decoration: none; }
   </style>
 </head>
 <body>
+  ${photoHtml}
   <h1>${esc(name)}</h1>
   ${contactLine ? `<p style="font-size:11px;color:#666;margin:0 0 6px 0;">${contactLine}</p>` : ''}
-  ${data.summary ? section('Summary', `<p style="font-size:12px;line-height:1.5;">${esc(data.summary)}</p>`) : ''}
-  ${section('Work Experience', workHtml)}
-  ${section('Education', eduHtml)}
-  ${section('Skills', skillsHtml)}
-  ${section('Projects', projectsHtml)}
-  ${section('Certifications', certsHtml)}
-  ${section('Languages', langsHtml)}
+  <div style="clear:both;"></div>
+  ${data.summary ? renderSection('Summary', `<p style="font-size:12px;line-height:1.5;">${esc(data.summary)}</p>`) : ''}
+  ${renderSection('Work Experience', workHtml)}
+  ${renderSection('Education', eduHtml)}
+  ${renderSection('Skills', skillsHtml)}
+  ${renderSection('Projects', projectsHtml)}
+  ${renderSection('Certifications', certsHtml)}
+  ${renderSection('Languages', langsHtml)}
+  ${renderSection('Volunteer Work', volunteerHtml)}
+  ${customHtml}
 </body>
 </html>`;
+}
+
+function renderSection(label: string, content: string): string {
+  return content
+    ? `<h2 style="margin:18px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#4AB7A6;border-bottom:1px solid #4AB7A6;padding-bottom:2px;">${esc(label)}</h2>${content}`
+    : '';
 }
 
 export async function GET(
@@ -150,19 +285,15 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Pro gate — free users hit the upgrade paywall
+  // Pro gate — respect the grace period after cancel (otherwise paying
+  // users who just cancelled lose Word export mid-cycle).
   const { data: profile } = await supabase
     .from('profiles')
-    .select('subscription_status')
+    .select('subscription_status, subscription_ends_at')
     .eq('id', user.id)
     .single();
 
-  const isPro =
-    profile?.subscription_status === 'active' ||
-    profile?.subscription_status === 'trialing' ||
-    profile?.subscription_status === 'pro';
-
-  if (!isPro) {
+  if (!isProActive(profile)) {
     return NextResponse.json(
       { error: 'Word download is a Pro feature. Please upgrade.' },
       { status: 403 }

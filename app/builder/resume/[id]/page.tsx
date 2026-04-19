@@ -523,24 +523,75 @@ export default function ResumeBuilderPage() {
     }
     setDownloadingPdf(true);
     try {
-      const { toJpeg } = await import('html-to-image');
+      // html-to-image renders the live DOM (with full CSS, fonts, backgrounds)
+      // into a canvas/image. We then hand that to jsPDF for the actual export.
+      //
+      // Quality notes:
+      //   - toPng (lossless) — JPEG with quality:0.98 was still introducing
+      //     visible text artefacts around serif fonts and colored blocks.
+      //   - pixelRatio: 3 — renders at 3× the CSS resolution. 2× was too soft
+      //     on retina screens and looked washed-out once scaled into a PDF.
+      //   - Multi-page: we compute the total height of the rendered image in
+      //     mm and slice it across N A4 pages. Previously the entire image
+      //     was squashed into a single 210×297mm page, which cropped any
+      //     resume longer than one page.
+      const { toPng } = await import('html-to-image');
       const jsPDF = (await import('jspdf')).default;
 
       const element = printRef.current;
-
-      // Render element to high-res JPEG using native CSS engine (handles oklch/lab colors)
-      const dataUrl = await toJpeg(element, {
-        quality: 0.98,
-        pixelRatio: 2,
+      const dataUrl = await toPng(element, {
+        pixelRatio: 3,
         backgroundColor: '#ffffff',
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        cacheBust: true,
       });
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, 210, 297);
+      // Decode the PNG to get pixel dimensions so we can paginate cleanly.
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = dataUrl;
+      });
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+      const pageWidth = 210;   // A4 mm
+      const pageHeight = 297;  // A4 mm
+
+      // Calculate the rendered height of the full image at A4 width.
+      const imgHeightMm = (img.height * pageWidth) / img.width;
+
+      if (imgHeightMm <= pageHeight + 1) {
+        // Single-page case — render at natural size (no stretching).
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidth, imgHeightMm, undefined, 'FAST');
+      } else {
+        // Multi-page case — slice the source image into A4-sized pages.
+        const pageHeightPx = (pageHeight * img.width) / pageWidth;
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = Math.ceil(pageHeightPx);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('2D canvas unavailable');
+
+        let y = 0;
+        let pageIndex = 0;
+        while (y < img.height) {
+          const sliceHeight = Math.min(pageHeightPx, img.height - y);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, y, img.width, sliceHeight, 0, 0, img.width, sliceHeight);
+          const sliceUrl = canvas.toDataURL('image/png');
+          if (pageIndex > 0) pdf.addPage();
+          const sliceHeightMm = (sliceHeight * pageWidth) / img.width;
+          pdf.addImage(sliceUrl, 'PNG', 0, 0, pageWidth, sliceHeightMm, undefined, 'FAST');
+          y += pageHeightPx;
+          pageIndex += 1;
+        }
+      }
+
       // Add subtle watermark for free users (classic template)
       if (!isPro) {
+        const pageCount = pdf.getNumberOfPages();
+        pdf.setPage(pageCount);
         pdf.setFontSize(7);
         pdf.setTextColor(180, 180, 180);
         pdf.text('Created with gethiretoday.com — Free Resume Builder', 105, 294, { align: 'center' });
@@ -548,6 +599,8 @@ export default function ResumeBuilderPage() {
       pdf.save(`${resumeTitle || 'resume'}.pdf`);
     } catch (err) {
       console.error('PDF generation failed', err);
+      setAiError('PDF download failed. Please try again — if it keeps failing, try a shorter resume or a different template.');
+      setTimeout(() => setAiError(null), 6000);
     } finally {
       setDownloadingPdf(false);
     }
