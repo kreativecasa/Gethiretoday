@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -12,6 +12,9 @@ import {
   PlusCircle,
   Loader2,
   SlidersHorizontal,
+  FileText,
+  Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 import { TemplatePreview, type TemplateLayout } from '@/components/template-preview';
 
@@ -68,15 +71,32 @@ const LEVEL_LABEL: Record<ExperienceLevel, string> = {
 
 // ─── Main Wizard ───────────────────────────────────────────────────────────
 
-export default function WizardPage() {
+function WizardInner() {
   const router = useRouter();
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
-  const [experience, setExperience] = useState<ExperienceLevel | null>(null);
-  const [chosenTemplate, setChosenTemplate] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  // If entered via /builder/wizard?upload=1, jump straight to step 3 (start)
+  // so the user can pick a file immediately — read from searchParams at mount
+  // using the lazy initial-state pattern (avoids setState-in-effect).
+  const wantsUpload = searchParams.get('upload') === '1';
+
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(() => (wantsUpload ? 3 : 0));
+  const [experience, setExperience] = useState<ExperienceLevel | null>(() =>
+    wantsUpload ? '3-5' : null
+  );
+  const [chosenTemplate, setChosenTemplate] = useState<string | null>(() =>
+    wantsUpload ? 'classic' : null
+  );
   const [startType, setStartType] = useState<StartType | null>(null);
   const [filterHeadshot, setFilterHeadshot] = useState<'all' | 'with' | 'without'>('all');
   const [filterColumns, setFilterColumns] = useState<'all' | 1 | 2>('all');
   const [creating, setCreating] = useState(false);
+
+  // Upload flow state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Keep the experience persisted across reloads inside this wizard
   useEffect(() => {
@@ -337,75 +357,211 @@ export default function WizardPage() {
     );
   };
 
-  const renderStart = () => (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center">
-      <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 text-center">
-        Are you uploading an existing resume?
-      </h1>
-      <p className="text-slate-500 mb-12 text-center">
-        Just review, edit, and update it with new information
-      </p>
+  const renderStart = () => {
+    const fileSizeMB = uploadFile ? (uploadFile.size / 1024 / 1024).toFixed(2) : '0';
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 text-center">
+          Are you uploading an existing resume?
+        </h1>
+        <p className="text-slate-500 mb-12 text-center">
+          Just review, edit, and update it with new information
+        </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl w-full">
-        {/* Upload */}
-        <button
-          disabled
-          className="relative p-10 rounded-2xl border-2 border-slate-200 text-center bg-white cursor-not-allowed opacity-60"
-        >
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-200 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
-            Coming soon
-          </div>
-          <div className="mx-auto w-16 h-16 mb-4 rounded-2xl bg-violet-100 flex items-center justify-center">
-            <Upload className="w-8 h-8 text-violet-600" />
-          </div>
-          <div className="text-lg font-bold text-slate-900 mb-2">Yes, upload my resume</div>
-          <div className="text-sm text-slate-500">We&apos;ll parse it and pre-fill the builder with your info</div>
-        </button>
+        {/* Hidden file input, triggered by the Upload card */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            setUploadError(null);
+            setUploadFile(f);
+            setStartType('upload');
+            // reset the input so selecting the same file again re-triggers change
+            e.target.value = '';
+          }}
+        />
 
-        {/* Fresh */}
-        <button
-          onClick={() => setStartType('fresh')}
-          className={`p-10 rounded-2xl border-2 text-center bg-white transition-all ${
-            startType === 'fresh' ? 'border-[#4AB7A6] bg-teal-50 shadow-md' : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-          }`}
-        >
-          <div className="mx-auto w-16 h-16 mb-4 rounded-2xl bg-orange-100 flex items-center justify-center">
-            <PlusCircle className="w-8 h-8 text-orange-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl w-full">
+          {/* Upload */}
+          <button
+            type="button"
+            onClick={() => {
+              setUploadError(null);
+              fileInputRef.current?.click();
+            }}
+            disabled={uploading}
+            className={`relative p-10 rounded-2xl border-2 text-center bg-white transition-all ${
+              uploadFile
+                ? 'border-[#4AB7A6] bg-teal-50 shadow-md'
+                : startType === 'upload'
+                ? 'border-[#4AB7A6] bg-teal-50 shadow-md'
+                : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+            } ${uploading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+          >
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-100 text-violet-700 text-[10px] font-bold px-3 py-1 rounded-full inline-flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> AI-powered
+            </div>
+            <div className="mx-auto w-16 h-16 mb-4 rounded-2xl bg-violet-100 flex items-center justify-center">
+              <Upload className="w-8 h-8 text-violet-600" />
+            </div>
+            <div className="text-lg font-bold text-slate-900 mb-2">Yes, upload my resume</div>
+            <div className="text-sm text-slate-500">
+              We&apos;ll parse it and pre-fill the builder with your info
+            </div>
+
+            {uploadFile && (
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-teal-200 text-xs text-slate-700 max-w-full">
+                <FileText className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+                <span className="font-medium truncate max-w-[200px]">{uploadFile.name}</span>
+                <span className="text-slate-400">· {fileSizeMB} MB</span>
+              </div>
+            )}
+
+            <div className="mt-4 text-[11px] text-slate-400">
+              PDF, DOCX or TXT — up to 8 MB
+            </div>
+          </button>
+
+          {/* Fresh */}
+          <button
+            type="button"
+            onClick={() => {
+              setUploadFile(null);
+              setUploadError(null);
+              setStartType('fresh');
+            }}
+            disabled={uploading}
+            className={`p-10 rounded-2xl border-2 text-center bg-white transition-all ${
+              startType === 'fresh' && !uploadFile
+                ? 'border-[#4AB7A6] bg-teal-50 shadow-md'
+                : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+            } ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            <div className="mx-auto w-16 h-16 mb-4 rounded-2xl bg-orange-100 flex items-center justify-center">
+              <PlusCircle className="w-8 h-8 text-orange-600" />
+            </div>
+            <div className="text-lg font-bold text-slate-900 mb-2">No, start from scratch</div>
+            <div className="text-sm text-slate-500">
+              We&apos;ll guide you step-by-step, with AI-written suggestions
+            </div>
+          </button>
+        </div>
+
+        {uploadError && (
+          <div className="mt-6 max-w-4xl w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-red-700 leading-relaxed">{uploadError}</div>
           </div>
-          <div className="text-lg font-bold text-slate-900 mb-2">No, start from scratch</div>
-          <div className="text-sm text-slate-500">We&apos;ll guide you step-by-step, with AI-written suggestions</div>
-        </button>
+        )}
+
+        <div className="mt-12 flex items-center justify-between w-full max-w-4xl">
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <button
+            type="button"
+            onClick={handleFinish}
+            disabled={(!startType && !uploadFile) || creating || uploading}
+            className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-white transition-all ${
+              (startType || uploadFile) && !creating && !uploading
+                ? 'shadow-md hover:shadow-lg'
+                : 'opacity-40 cursor-not-allowed'
+            }`}
+            style={{ backgroundColor: '#34D399' }}
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Reading your resume…
+              </>
+            ) : creating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : uploadFile ? (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Parse & open builder
+              </>
+            ) : (
+              <>
+                Next <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
-
-      <div className="mt-12 flex items-center justify-between w-full max-w-4xl">
-        <button
-          onClick={() => setStep(2)}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-slate-300 text-slate-700 font-semibold hover:bg-slate-50"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <button
-          onClick={handleFinish}
-          disabled={!startType || creating}
-          className={`inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-white transition-all ${
-            startType && !creating ? 'shadow-md hover:shadow-lg' : 'opacity-40 cursor-not-allowed'
-          }`}
-          style={{ backgroundColor: '#34D399' }}
-        >
-          {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ArrowRight className="w-4 h-4" /></>}
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // ─── Finish: create resume, route to builder ──────────────────────────────
 
   const handleFinish = async () => {
+    const templateId = chosenTemplate ?? 'classic';
+
+    // ── Upload path — user chose to import an existing resume ──
+    if (uploadFile) {
+      setUploading(true);
+      setUploadError(null);
+      try {
+        const form = new FormData();
+        form.append('file', uploadFile);
+        form.append('template_id', templateId);
+
+        const res = await fetch('/api/resume/import', {
+          method: 'POST',
+          body: form,
+        });
+
+        if (res.status === 401) {
+          router.push('/login?redirect=/builder/wizard');
+          return;
+        }
+
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok || !json.resume_id) {
+          setUploadError(
+            json?.error ||
+              'We couldn\'t parse that resume. Try a different file or start from scratch.'
+          );
+          setUploading(false);
+          return;
+        }
+
+        try {
+          sessionStorage.setItem(
+            'dashboard_toast',
+            `Imported ${json.extracted?.work_count ?? 0} jobs and ${json.extracted?.skills_count ?? 0} skills. Review and edit below.`
+          );
+        } catch {}
+
+        router.push(
+          `/builder/resume/${json.resume_id}?imported=1&template=${templateId}`
+        );
+        return;
+      } catch (err) {
+        console.error('[wizard] upload failed:', err);
+        setUploadError(
+          'Upload failed. Please check your connection and try again.'
+        );
+        setUploading(false);
+        return;
+      }
+    }
+
+    // ── Fresh start path ──
     setCreating(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getTemplateStarterData } = require('@/lib/example-to-resume') as typeof import('@/lib/example-to-resume');
-      const templateId = chosenTemplate ?? 'classic';
       const res = await fetch('/api/resume', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -485,5 +641,13 @@ export default function WizardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function WizardPage() {
+  return (
+    <Suspense fallback={null}>
+      <WizardInner />
+    </Suspense>
   );
 }

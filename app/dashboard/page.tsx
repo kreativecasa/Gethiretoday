@@ -22,6 +22,7 @@ import {
   Share2,
   Sparkles,
   X,
+  Upload,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -576,7 +577,7 @@ export default function DashboardPage() {
               You have {displayResumes.length} resume{displayResumes.length !== 1 ? 's' : ''}. Keep improving your ATS score!
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <Button
               onClick={handleNewResume}
               disabled={creatingResume}
@@ -585,6 +586,14 @@ export default function DashboardPage() {
             >
               {creatingResume ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
               Build New Resume
+            </Button>
+            <Button
+              onClick={() => router.push('/builder/wizard?upload=1')}
+              variant="outline"
+              className="rounded-full text-sm font-medium px-5 h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <Upload className="w-4 h-4 mr-1.5" />
+              Upload Resume
             </Button>
             <Button
               onClick={handleNewCoverLetter}
