@@ -44,7 +44,7 @@ export default async function BlogPostPage({ params }: Props) {
     "description": post.description,
     "datePublished": post.date,
     "url": `https://gethiretoday.com/blog/${post.slug}`,
-    "publisher": { "@type": "Organization", "name": "Get Hire Today", "url": "https://gethiretoday.com" },
+    "publisher": { "@type": "Organization", "name": "Get Hired Today", "url": "https://gethiretoday.com" },
   };
 
   return (

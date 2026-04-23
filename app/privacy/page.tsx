@@ -3,8 +3,8 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
 export const metadata = {
-  title: "Privacy Policy - Get Hire Today",
-  description: "How Get Hire Today collects, uses, and protects your personal information.",
+  title: "Privacy Policy - Get Hired Today",
+  description: "How Get Hired Today collects, uses, and protects your personal information.",
 };
 
 export default function PrivacyPage() {
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           <div className="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Information We Collect</h2>
-              <p>When you use Get Hire Today, we collect information you provide directly, including:</p>
+              <p>When you use Get Hired Today, we collect information you provide directly, including:</p>
               <ul className="list-disc pl-5 mt-2 space-y-1 text-sm">
                 <li>Account information (name, email address, password)</li>
                 <li>Resume content you create (work history, education, skills, contact details)</li>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">4. Third-Party Services</h2>
-              <p>Get Hire Today uses the following third-party services:</p>
+              <p>Get Hired Today uses the following third-party services:</p>
               <ul className="list-disc pl-5 mt-2 space-y-1 text-sm">
                 <li><strong>Supabase</strong> — database, authentication</li>
                 <li><strong>Stripe</strong> — payment processing</li>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">7. Children&apos;s Privacy</h2>
-              <p>Get Hire Today is not directed to children under 13. We do not knowingly collect data from children. If you believe a child has provided us data, contact us immediately.</p>
+              <p>Get Hired Today is not directed to children under 13. We do not knowingly collect data from children. If you believe a child has provided us data, contact us immediately.</p>
             </section>
 
             <section>

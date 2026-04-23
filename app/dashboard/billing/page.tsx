@@ -130,7 +130,7 @@ export default function BillingPage() {
   const billingEntry = activatedAt
     ? {
         date: activatedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        description: 'Get Hire Today Pro — Monthly subscription',
+        description: 'Get Hired Today Pro — Monthly subscription',
       }
     : null;
 

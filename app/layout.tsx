@@ -12,8 +12,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://gethiretoday.com"),
   title: {
-    default: "Free AI Resume Builder — Get Hired Today | GetHireToday",
-    template: "%s | GetHireToday",
+    default: "Free AI Resume Builder — Get Hired Today | GetHiredToday",
+    template: "%s | GetHiredToday",
   },
   description:
     "Build an ATS-friendly resume in 3 minutes with AI. Free to start. Tailored bullet points, professional templates, and an ATS checker that gets you past the bots and in front of real recruiters.",
@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     "AI resume writer", "ATS checker", "resume templates 2026", "cover letter builder",
     "professional resume", "resume builder free", "online resume builder", "CV builder",
   ],
-  authors: [{ name: "GetHireToday", url: "https://gethiretoday.com" }],
-  creator: "GetHireToday",
-  publisher: "GetHireToday",
+  authors: [{ name: "GetHiredToday", url: "https://gethiretoday.com" }],
+  creator: "GetHiredToday",
+  publisher: "GetHiredToday",
   alternates: { canonical: "https://gethiretoday.com" },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://gethiretoday.com",
-    siteName: "GetHireToday",
+    siteName: "GetHiredToday",
     title: "Free AI Resume Builder — Get Hired Today",
     description: "Build an ATS-friendly resume in 3 minutes with AI. Tailored bullet points, professional templates, and ATS compatibility checking. Free to start.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "GetHireToday — Free AI Resume Builder" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "GetHiredToday — Free AI Resume Builder" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -73,7 +73,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "GetHireToday",
+            "name": "GetHiredToday",
             "url": "https://gethiretoday.com",
             "logo": "https://gethiretoday.com/og-image.png",
             "description": "AI-powered resume builder that helps job seekers create ATS-friendly resumes and land more interviews.",
@@ -86,7 +86,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "GetHireToday AI Resume Builder",
+            "name": "GetHiredToday AI Resume Builder",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "url": "https://gethiretoday.com",
