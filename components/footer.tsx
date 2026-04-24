@@ -48,7 +48,7 @@ export default function Footer() {
             </p>
             <div className="mt-6 inline-flex items-center gap-2 bg-gray-800 rounded-full px-4 py-2">
               <span className="text-xs font-semibold text-[var(--teal)]">PRO</span>
-              <span className="text-xs text-gray-300">Only $2/month — Cancel anytime</span>
+              <span className="text-xs text-gray-300">Only $9.99/month — Cancel anytime</span>
             </div>
           </div>
 
@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-gray-800 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            &copy; 2026 Get Hire Today. All rights reserved.
+            &copy; 2026 HiredTodayApp. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">

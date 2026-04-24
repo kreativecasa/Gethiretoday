@@ -130,7 +130,7 @@ export default function BillingPage() {
   const billingEntry = activatedAt
     ? {
         date: activatedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        description: 'Get Hire Today Pro — Monthly subscription',
+        description: 'HiredTodayApp Pro — Monthly subscription',
       }
     : null;
 
@@ -181,7 +181,7 @@ export default function BillingPage() {
                     )}
                   </div>
                   <p className="text-2xl font-bold mt-1" style={{ color: '#4AB7A6' }}>
-                    $2<span className="text-sm font-normal text-gray-400">/month</span>
+                    $9.99<span className="text-sm font-normal text-gray-400">/month</span>
                   </p>
                   {cancelled ? (
                     <p className="text-sm text-gray-500 mt-0.5">
@@ -235,7 +235,7 @@ export default function BillingPage() {
                   {upgradeLoading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Redirecting…</>
                   ) : (
-                    <><Crown className="w-4 h-4 mr-2" />Resubscribe to Pro — $2/mo</>
+                    <><Crown className="w-4 h-4 mr-2" />Resubscribe to Pro — $9.99/mo</>
                   )}
                 </Button>
               ) : !showCancelConfirm ? (
@@ -316,7 +316,7 @@ export default function BillingPage() {
                   <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-white/90" />
                     <span className="font-bold text-lg">Upgrade to Pro</span>
-                    <span className="ml-auto text-2xl font-bold">$2<span className="text-sm font-normal opacity-80">/mo</span></span>
+                    <span className="ml-auto text-2xl font-bold">$9.99<span className="text-sm font-normal opacity-80">/mo</span></span>
                   </div>
                   <ul className="space-y-1">
                     {PRO_FEATURES.map((feature) => (
@@ -337,7 +337,7 @@ export default function BillingPage() {
                     ) : (
                       <>
                         <Crown className="w-4 h-4 mr-2" />
-                        Upgrade Now – $2/month
+                        Upgrade Now – $9.99/month
                       </>
                     )}
                   </Button>
@@ -402,7 +402,7 @@ export default function BillingPage() {
                   <p className="text-xs text-gray-400 mt-0.5">{billingEntry.date}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-sm font-semibold text-gray-900">$2.00</span>
+                  <span className="text-sm font-semibold text-gray-900">$9.99</span>
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700">Paid</span>
                 </div>
               </div>

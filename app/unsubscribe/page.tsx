@@ -46,7 +46,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
           <>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Something went wrong</h1>
             <p className="text-gray-500 mb-6">
-              Please email <a href="mailto:hello@gethiretoday.com" className="text-teal underline">hello@gethiretoday.com</a> and we&apos;ll remove you manually.
+              Please email <a href="mailto:hello@hiredtodayapp.com" className="text-teal underline">hello@hiredtodayapp.com</a> and we&apos;ll remove you manually.
             </p>
           </>
         )}
@@ -55,13 +55,13 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
           <>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Unsubscribe</h1>
             <p className="text-gray-500 mb-6">
-              We couldn&apos;t find the email to unsubscribe. Please use the unsubscribe link in the email you received, or email <a href="mailto:hello@gethiretoday.com" className="text-teal underline">hello@gethiretoday.com</a>.
+              We couldn&apos;t find the email to unsubscribe. Please use the unsubscribe link in the email you received, or email <a href="mailto:hello@hiredtodayapp.com" className="text-teal underline">hello@hiredtodayapp.com</a>.
             </p>
           </>
         )}
 
         <Link href="/" className="inline-block text-sm text-teal hover:underline font-semibold">
-          ← Back to GetHireToday
+          ← Back to HiredTodayApp
         </Link>
       </div>
     </main>

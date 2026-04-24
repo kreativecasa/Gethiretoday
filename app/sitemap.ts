@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { RESUME_EXAMPLES } from '@/lib/resume-examples-data';
 import { BLOG_POSTS } from '@/lib/blog-posts';
 
-const BASE = 'https://gethiretoday.com';
+const BASE = 'https://hiredtodayapp.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [

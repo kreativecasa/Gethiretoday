@@ -207,7 +207,7 @@ export default async function CoverLetterStartPage() {
             <>
               Unlock all templates with{' '}
               <Link href="/api/lemonsqueezy/checkout-redirect?from=/builder/cover-letter" className="text-teal-600 hover:underline font-medium">
-                Pro — $2/month
+                Pro — $9.99/month
               </Link>
               .
             </>

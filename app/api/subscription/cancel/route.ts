@@ -1,6 +1,6 @@
 /**
  * Cancel the current user's Gumroad subscription from inside the app — so
- * the user never has to leave gethiretoday.com to manage their subscription.
+ * the user never has to leave hiredtodayapp.com to manage their subscription.
  *
  * Guiding principle: the user clicked Cancel, we respect that. No user ever
  * gets stuck on a "cannot cancel, please contact support" dead end. Whatever

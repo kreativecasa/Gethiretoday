@@ -119,7 +119,7 @@ const PLANS: Array<{
   {
     id: 'pro',
     name: 'Pro',
-    price: '$2',
+    price: '$9.99',
     period: 'per month',
     badge: 'Recommended',
     features: ['Unlimited resumes', 'All 60+ templates', 'PDF + Word download', 'AI writing tools', 'Cover letter builder'],
@@ -217,7 +217,7 @@ function SignupForm() {
 
     setSuccess(true);
     try {
-      sessionStorage.setItem('dashboard_toast', 'Account created! Welcome to GetHireToday.');
+      sessionStorage.setItem('dashboard_toast', 'Account created! Welcome to HiredTodayApp.');
     } catch {}
     setTimeout(() => {
       router.push('/dashboard');
@@ -325,7 +325,7 @@ function SignupForm() {
             </li>
             <li>
               Look for a sender like{' '}
-              <span className="font-mono">noreply@gethiretoday.com</span> (or a Supabase address if
+              <span className="font-mono">noreply@hiredtodayapp.com</span> (or a Supabase address if
               custom SMTP isn&apos;t configured yet).
             </li>
             <li>

@@ -21,7 +21,7 @@ The in-page cancel works by calling Gumroad's API directly instead of redirectin
 1. **Create a Gumroad access token:**
    - Open https://gumroad.com/settings/advanced
    - Scroll to **Applications** → click **Create application**
-   - Fill in any name (e.g. "GetHireToday Server") and redirect URL `https://gethiretoday.com` (unused, but required)
+   - Fill in any name (e.g. "HiredTodayApp Server") and redirect URL `https://hiredtodayapp.com` (unused, but required)
    - Click **Create**
    - On the resulting page, click **Generate access token**
    - Copy the token that starts with something like `ght_...` or a similar Gumroad format
@@ -39,7 +39,7 @@ The in-page cancel works by calling Gumroad's API directly instead of redirectin
 
 ## What this fix ships
 
-### 🔴 Cancel button stays on gethiretoday.com
+### 🔴 Cancel button stays on hiredtodayapp.com
 **Bug:** Clicking "Yes, cancel" in the confirm dialog redirected the user to `app.gumroad.com/library`, pulling them out of the product and leaving them to figure out cancellation on Gumroad's interface.
 
 **Fix:**
@@ -62,7 +62,7 @@ The in-page cancel works by calling Gumroad's API directly instead of redirectin
     - Subheading changes to *"Pro access continues until {nextBillingDate}. You won't be charged again."*
     - "Manage" and "Cancel subscription" buttons disappear.
     - Success banner: *"Subscription cancelled. Your Pro access remains active until the end of your current billing period."*
-    - A **"Resubscribe to Pro — $2/mo"** button appears so the user can re-upgrade with one click.
+    - A **"Resubscribe to Pro — $9.99/mo"** button appears so the user can re-upgrade with one click.
   - Initial page load already recognises `subscription_status: 'cancelled'` and `cancelling` and renders the correct state (so users who return to the page later still see the cancelled card, not "Active").
   - Error states: network failures and Gumroad API errors surface an inline error with a retry path instead of silently failing.
 

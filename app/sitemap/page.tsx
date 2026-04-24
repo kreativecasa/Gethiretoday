@@ -3,7 +3,7 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
 export const metadata = {
-  title: "Sitemap - Get Hire Today",
+  title: "Sitemap - HiredTodayApp",
 };
 
 const sections = [

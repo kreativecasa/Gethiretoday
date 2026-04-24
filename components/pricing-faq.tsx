@@ -9,7 +9,7 @@ const faqs = [
     a: "Yes — forever. No credit card required. You can create and download your resume on the free plan without ever entering payment details. Upgrade only when you want more.",
   },
   {
-    q: "What's included in the $2/month Pro plan?",
+    q: "What's included in the $9.99/month Pro plan?",
     a: "Everything: unlimited resumes, all 60+ templates, PDF and Word downloads, full AI content generation, AI bullet point writer, real-time ATS scoring, cover letter builder, priority support, and new templates added every month.",
   },
   {
@@ -25,8 +25,8 @@ const faqs = [
     a: "Yes — 14 days, no questions asked. If you're not completely satisfied within 14 days of upgrading to Pro, contact our support team and we'll issue a full refund immediately.",
   },
   {
-    q: "Why is GetHireToday so much cheaper than other paid resume builders?",
-    a: "Most paid resume builders charge $29–$40/month for similar features. We charge $2/month — that's 15x cheaper. We believe everyone deserves access to great career tools, not just people who can afford expensive subscriptions. Plus, our ATS scoring engine is built on analysis of real recruiter feedback.",
+    q: "Why is HiredTodayApp so much cheaper than other paid resume builders?",
+    a: "Most paid resume builders charge $29–$40/month for similar features. We charge $9.99/month — that's 15x cheaper. We believe everyone deserves access to great career tools, not just people who can afford expensive subscriptions. Plus, our ATS scoring engine is built on analysis of real recruiter feedback.",
   },
 ];
 

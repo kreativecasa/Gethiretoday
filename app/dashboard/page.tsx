@@ -148,7 +148,7 @@ const QUICK_ACTIONS = [
 
 // ── Share Modal ──────────────────────────────────────────────────────────────
 function ShareModal({ id, type, onClose }: { id: string; type: 'resume' | 'cover-letter'; onClose: () => void }) {
-  const link = `https://gethiretoday.com/${type === 'resume' ? 'resume' : 'cover-letter'}/public/${id}`;
+  const link = `https://hiredtodayapp.com/${type === 'resume' ? 'resume' : 'cover-letter'}/public/${id}`;
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<'enabling' | 'ready' | 'error'>('enabling');
 

@@ -70,7 +70,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             {[
               { label: 'Resumes Created', value: '127,400+' },
               { label: 'ATS Pass Rate', value: '94%' },
-              { label: 'All-In Price', value: '$2/month' },
+              { label: 'All-In Price', value: '$9.99/month' },
             ].map((stat) => (
               <div
                 key={stat.label}

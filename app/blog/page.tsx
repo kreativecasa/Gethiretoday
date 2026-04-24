@@ -8,7 +8,7 @@ import { BLOG_POSTS } from '@/lib/blog-posts';
 export const metadata: Metadata = {
   title: "Resume Tips & Career Advice Blog",
   description: "Expert resume writing tips, ATS guides, and career advice. Learn how to write a resume that gets interviews — from professionals who've reviewed thousands.",
-  alternates: { canonical: "https://gethiretoday.com/blog" },
+  alternates: { canonical: "https://hiredtodayapp.com/blog" },
 };
 
 export default function BlogIndex() {

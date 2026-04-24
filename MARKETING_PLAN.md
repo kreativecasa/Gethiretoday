@@ -1,12 +1,12 @@
-# GetHireToday — Marketing Plan
+# HiredTodayApp — Marketing Plan
 
 _Last updated: 2026-04-18. This file is the single source of truth for the marketing workstream. If a future handoff session loses context, read this first._
 
 ## Positioning
 
-**One-liner:** Free AI resume builder with ATS scoring, 14 modern templates, Word + PDF export. Pro unlocks everything for **$2/month** — vs $24+ at most paid resume builders.
+**One-liner:** Free AI resume builder with ATS scoring, 14 modern templates, Word + PDF export. Pro unlocks everything for **$9.99/month** — vs $24+ at most paid resume builders.
 
-The $2/mo price is the sharpest wedge. Every hook leads with it.
+The $9.99/mo price is the sharpest wedge. Every hook leads with it.
 
 ## Audience (ranked by conversion likelihood)
 
@@ -17,7 +17,7 @@ The $2/mo price is the sharpest wedge. Every hook leads with it.
 ## Channels (ranked by today's ROI)
 
 1. **Reddit organic** — r/resumes, r/jobs, r/careerguidance, r/recruitinghell, r/EngineeringResumes, r/cscareerquestions. Pure helpful answers first; mention the tool only when it directly answers the question. **No top-level self-promo posts for the first two weeks** — new accounts get shadowbanned instantly. Start with 5–10 genuinely useful comments to build karma.
-2. **IndieHackers + ProductHunt launches** — one post each. Lead with the $2/mo angle.
+2. **IndieHackers + ProductHunt launches** — one post each. Lead with the $9.99/mo angle.
 3. **SEO / blog** — existing posts committed (`241e449`, `009194a`). Audit what's indexed; queue new high-intent posts ("cheap AI resume builder 2026", "Free ATS checker 2026"). Compound-growth, slow but cheap.
 4. **LinkedIn / X** — lower priority until there's existing audience.
 
@@ -28,7 +28,7 @@ The $2/mo price is the sharpest wedge. Every hook leads with it.
 3. **Reddit recon.** Find 3–5 recent threads in target subs where the tool is a legit answer. Draft comments. User approves each before posting.
 4. **Draft IndieHackers + ProductHunt launch posts** as markdown. Hold until account age / karma is checked.
 5. **Queue 2–3 SEO blog posts** targeting neutral high-intent terms like "cheap AI resume builder", "free resume builder no subscription", "ATS resume checker free 2026". Commit for deploy.
-6. **Verify analytics + set up UTM scheme.** Confirm Vercel Analytics is firing on gethiretoday.com. UTM convention: `?utm_source={channel}&utm_medium={post|comment}&utm_campaign=apr18-launch`.
+6. **Verify analytics + set up UTM scheme.** Confirm Vercel Analytics is firing on hiredtodayapp.com. UTM convention: `?utm_source={channel}&utm_medium={post|comment}&utm_campaign=apr18-launch`.
 
 ## Copy & claims — user decisions
 
@@ -46,7 +46,7 @@ The $2/mo price is the sharpest wedge. Every hook leads with it.
 
 ## What's already shipped (context for the plan)
 
-- **Product:** Full builder at gethiretoday.com with 14 templates, wizard mode, AI suggestions (bullets/skills/summaries), ATS checker, Word + PDF export, Stripe paywall, public share links.
+- **Product:** Full builder at hiredtodayapp.com with 14 templates, wizard mode, AI suggestions (bullets/skills/summaries), ATS checker, Word + PDF export, Stripe paywall, public share links.
 - **Blog:** Posts committed in `241e449` (cover letter + skills) and `009194a` (ATS tips + resume format 2026). Not yet audited for quality/SEO fit.
 - **Drip emails:** Welcome + follow-up queue (commit `241e449`). Triggered on signup.
 - **Dashboard:** Pro badge, paywall, download buttons working (verified live).

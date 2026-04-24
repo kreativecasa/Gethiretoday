@@ -26,11 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: ex.metaTitle,
     description: ex.metaDescription,
-    alternates: { canonical: `https://gethiretoday.com/resume-examples/${ex.slug}` },
+    alternates: { canonical: `https://hiredtodayapp.com/resume-examples/${ex.slug}` },
     openGraph: {
       title: ex.metaTitle,
       description: ex.metaDescription,
-      url: `https://gethiretoday.com/resume-examples/${ex.slug}`,
+      url: `https://hiredtodayapp.com/resume-examples/${ex.slug}`,
       type: 'article',
     },
   };
@@ -88,8 +88,8 @@ export default async function ExamplePage({ params }: Props) {
     "@type": "Article",
     "headline": ex.metaTitle,
     "description": ex.metaDescription,
-    "url": `https://gethiretoday.com/resume-examples/${ex.slug}`,
-    "publisher": { "@type": "Organization", "name": "Get Hire Today", "url": "https://gethiretoday.com" },
+    "url": `https://hiredtodayapp.com/resume-examples/${ex.slug}`,
+    "publisher": { "@type": "Organization", "name": "HiredTodayApp", "url": "https://hiredtodayapp.com" },
   };
 
   return (

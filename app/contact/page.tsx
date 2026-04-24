@@ -51,7 +51,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Email Us</h3>
                   <p className="text-sm text-gray-500">
-                    <a href="mailto:hello@gethiretoday.com" className="text-teal hover:underline">hello@gethiretoday.com</a>
+                    <a href="mailto:hello@hiredtodayapp.com" className="text-teal hover:underline">hello@hiredtodayapp.com</a>
                   </p>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function ContactPage() {
                     </div>
 
                     {status === "error" && (
-                      <p className="text-sm text-red-600">Something went wrong. Please email us directly at hello@gethiretoday.com.</p>
+                      <p className="text-sm text-red-600">Something went wrong. Please email us directly at hello@hiredtodayapp.com.</p>
                     )}
 
                     <button

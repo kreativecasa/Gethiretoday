@@ -19,13 +19,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.description,
-    alternates: { canonical: `https://gethiretoday.com/blog/${post.slug}` },
+    alternates: { canonical: `https://hiredtodayapp.com/blog/${post.slug}` },
     openGraph: {
       title: post.title,
       description: post.description,
       type: 'article',
       publishedTime: post.date,
-      url: `https://gethiretoday.com/blog/${post.slug}`,
+      url: `https://hiredtodayapp.com/blog/${post.slug}`,
     },
   };
 }
@@ -43,8 +43,8 @@ export default async function BlogPostPage({ params }: Props) {
     "headline": post.title,
     "description": post.description,
     "datePublished": post.date,
-    "url": `https://gethiretoday.com/blog/${post.slug}`,
-    "publisher": { "@type": "Organization", "name": "Get Hire Today", "url": "https://gethiretoday.com" },
+    "url": `https://hiredtodayapp.com/blog/${post.slug}`,
+    "publisher": { "@type": "Organization", "name": "HiredTodayApp", "url": "https://hiredtodayapp.com" },
   };
 
   return (

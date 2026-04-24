@@ -5,7 +5,7 @@
  * or a Pro-gated feature (Word export).
  *
  * Design principles:
- *   • One clear primary action (Upgrade to Pro — $2/mo).
+ *   • One clear primary action (Upgrade to Pro — $9.99/mo).
  *   • One clear escape (switch to the free Classic template), so the user is
  *     never trapped.
  *   • SEO-aware, benefit-rich copy — mirrors the positioning used across the
@@ -98,8 +98,8 @@ export default function ProUpgradeModal({
     trigger === 'word'
       ? 'Download editable Microsoft Word (.doc) files with Pro — or keep using PDF on the free plan.'
       : templateLabel
-      ? `The ${templateLabel} template is part of our Pro collection. Unlock it, along with all 14 premium templates, AI writing, and the full ATS checker for just $2/month.`
-      : 'Unlock all 14 premium templates, AI writing, and the full ATS checker for $2/month — less than your morning coffee.';
+      ? `The ${templateLabel} template is part of our Pro collection. Unlock it, along with all 14 premium templates, AI writing, and the full ATS checker for just $9.99/month.`
+      : 'Unlock all 14 premium templates, AI writing, and the full ATS checker for $9.99/month — less than your morning coffee.';
 
   return (
     <div
@@ -160,7 +160,7 @@ export default function ProUpgradeModal({
         <div className="px-6 py-5">
           {/* Price */}
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-4xl font-extrabold text-slate-900 tracking-tight">$2</span>
+            <span className="text-4xl font-extrabold text-slate-900 tracking-tight">$9.99</span>
             <span className="text-sm font-medium text-slate-500">per month · cancel anytime</span>
           </div>
           <p className="text-xs text-slate-500 mb-4">
@@ -218,7 +218,7 @@ export default function ProUpgradeModal({
             }}
           >
             <Crown className="w-4 h-4" />
-            Upgrade to Pro — $2/mo
+            Upgrade to Pro — $9.99/mo
           </Link>
 
           {/* Secondary action */}

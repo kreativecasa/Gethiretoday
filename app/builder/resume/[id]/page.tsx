@@ -594,7 +594,7 @@ export default function ResumeBuilderPage() {
         pdf.setPage(pageCount);
         pdf.setFontSize(7);
         pdf.setTextColor(180, 180, 180);
-        pdf.text('Created with gethiretoday.com — Free Resume Builder', 105, 294, { align: 'center' });
+        pdf.text('Created with hiredtodayapp.com — Free Resume Builder', 105, 294, { align: 'center' });
       }
       pdf.save(`${resumeTitle || 'resume'}.pdf`);
     } catch (err) {
@@ -1915,7 +1915,7 @@ function ProjectsSection({
             </div>
             <div>
               <FieldLabel>Project Name</FieldLabel>
-              <Input value={proj.name} onChange={(e) => updateProject(proj.id, 'name', e.target.value)} placeholder="Get Hire Today" className="text-sm" />
+              <Input value={proj.name} onChange={(e) => updateProject(proj.id, 'name', e.target.value)} placeholder="HiredTodayApp" className="text-sm" />
             </div>
             <div>
               <FieldLabel>Description</FieldLabel>

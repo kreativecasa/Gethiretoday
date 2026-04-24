@@ -36,50 +36,17 @@ const proFeatures: Array<{ label: string }> = [
 /* ─── Component ──────────────────────────────────────────────────────── */
 
 export default function PricingToggle() {
-  const [annual, setAnnual] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleGetPro = async () => {
     setCheckoutLoading(true);
-    await startCheckout(annual ? 'yearly' : 'monthly');
+    await startCheckout('monthly');
     setCheckoutLoading(false);
   };
 
   return (
     <div>
-      {/* Billing toggle — pill switcher */}
-      <div className="flex items-center justify-center mb-12">
-        <div className="inline-flex items-center gap-1 bg-slate-100 rounded-full p-1">
-          <button
-            onClick={() => setAnnual(false)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-              !annual
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setAnnual(true)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
-              annual
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Annual
-            <span
-              className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-              style={{ backgroundColor: "#4AB7A6" }}
-            >
-              Save 17%
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Cards */}
+      {/* Cards — monthly-only pricing */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
 
         {/* ── FREE card ──────────────────────────────────────────── */}
@@ -147,21 +114,10 @@ export default function PricingToggle() {
               Pro
             </span>
 
-            {/* Price — changes with toggle */}
-            {annual ? (
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold" style={{ color: "#4AB7A6" }}>$1.67</span>
-                  <span className="text-slate-400 text-sm">/month</span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Billed $19.99/year</p>
-              </div>
-            ) : (
-              <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-bold" style={{ color: "#4AB7A6" }}>$2</span>
-                <span className="text-slate-400 text-sm">/month</span>
-              </div>
-            )}
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl font-bold" style={{ color: "#4AB7A6" }}>$9.99</span>
+              <span className="text-slate-400 text-sm">/month</span>
+            </div>
 
             <p className="text-sm text-slate-500 mt-2">Everything you need to get hired</p>
             <p className="text-sm text-slate-400 mt-0.5 italic">☕ Less than a coffee per month</p>

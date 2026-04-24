@@ -114,7 +114,7 @@ export function TemplatePickerPopover({ templates, currentId, onChange, isPro }:
           {!isPro && (
             <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center justify-between gap-3">
               <div className="text-xs text-amber-800">
-                <span className="font-semibold">Unlock all {templates.filter((t) => t.isPro).length} Pro templates</span> — just $2/mo
+                <span className="font-semibold">Unlock all {templates.filter((t) => t.isPro).length} Pro templates</span> — just $9.99/mo
               </div>
               <a
                 href={`/api/lemonsqueezy/checkout-redirect${

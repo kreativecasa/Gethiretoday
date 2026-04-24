@@ -8,12 +8,12 @@ import PricingFAQ from "@/components/pricing-faq";
 
 export const metadata: Metadata = {
   title: "Pricing — Simple Plans for Every Job Seeker",
-  description: "GetHireToday is free to start. Upgrade to Pro for unlimited resumes, all templates, PDF downloads, full AI writing, and ATS checking. Cancel anytime.",
-  alternates: { canonical: "https://gethiretoday.com/pricing" },
+  description: "HiredTodayApp is free to start. Upgrade to Pro for unlimited resumes, all templates, PDF downloads, full AI writing, and ATS checking. Cancel anytime.",
+  alternates: { canonical: "https://hiredtodayapp.com/pricing" },
   openGraph: {
-    title: "Pricing — Simple Plans for Every Job Seeker | GetHireToday",
+    title: "Pricing — Simple Plans for Every Job Seeker | HiredTodayApp",
     description: "Free plan available. Pro plan unlocks unlimited resumes, AI writing, PDF downloads, and full ATS checking.",
-    url: "https://gethiretoday.com/pricing",
+    url: "https://hiredtodayapp.com/pricing",
   },
 };
 
@@ -93,8 +93,8 @@ export default function PricingPage() {
             </h1>
 
             <p className="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto">
-              While other resume builders charge $29/month, GetHireToday gives you everything
-              for <span className="font-bold text-slate-900">$2</span>. Our goal is to remove
+              While other resume builders charge $29/month, HiredTodayApp gives you everything
+              for <span className="font-bold text-slate-900">$9.99</span>. Our goal is to remove
               cost as a barrier to getting hired.
             </p>
 

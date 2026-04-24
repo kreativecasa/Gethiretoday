@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://gethiretoday.com/sitemap.xml',
-    host: 'https://gethiretoday.com',
+    sitemap: 'https://hiredtodayapp.com/sitemap.xml',
+    host: 'https://hiredtodayapp.com',
   };
 }
