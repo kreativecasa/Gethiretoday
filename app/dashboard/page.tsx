@@ -30,6 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { truncate } from '@/lib/utils';
 import { TemplatePreview, previewFromResumeData } from '@/components/template-preview';
 import { isProActive, isCancelledWithGrace, formatEndsAt } from '@/lib/subscription';
+import { scoreResume } from '@/lib/ats';
 import type { TemplateLayout } from '@/components/template-preview';
 import { createClient } from '@/lib/supabase';
 
@@ -531,9 +532,16 @@ export default function DashboardPage() {
     setShareTarget({ id, type });
   };
 
-  // Always show real data from the API (no mock fallback — a new user should
-  // see the proper empty state, not fake "Software Engineer Resume" cards).
-  const displayResumes = resumes;
+  // Always show real data from the API. Overlay a FRESH ATS score computed
+  // from each resume's current `data` — the stored `ats_score` column is only
+  // updated when the user clicks Save in the builder, so it can drift stale
+  // if they edit without saving, or be absent for newly-imported resumes.
+  // Computing here keeps every card and the Best-ATS stat honest no matter
+  // how many resumes the user has.
+  const displayResumes = resumes.map((r) => ({
+    ...r,
+    ats_score: r.data ? scoreResume(r.data) : r.ats_score,
+  }));
   const displayCoverLetters = coverLetters;
 
   const bestAts = displayResumes.length > 0

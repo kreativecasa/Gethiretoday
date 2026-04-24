@@ -55,6 +55,7 @@ import {
 } from '@/components/resume-templates/pro-templates';
 import { createClient } from '@/lib/supabase';
 import { isProActive } from '@/lib/subscription';
+import { resumeDataToText, scoreResume } from '@/lib/ats';
 import { SuggestionPanel } from '@/components/suggestion-panel';
 import {
   ProTipBox,
@@ -432,55 +433,22 @@ export default function ResumeBuilderPage() {
     []
   );
 
-  // Build a plain text representation of the resume for ATS scoring
-  const buildResumeText = (data: ResumeData): string => {
-    const parts: string[] = [];
-    const c = data.contact;
-    if (c.full_name) parts.push(c.full_name);
-    if (c.email) parts.push(c.email);
-    if (c.phone) parts.push(c.phone);
-    if (c.location) parts.push(c.location);
-    if (c.linkedin) parts.push(c.linkedin);
-    if (data.summary) parts.push('Summary\n' + data.summary);
-    if (data.work_experience?.length) {
-      parts.push('Work Experience');
-      data.work_experience.forEach((j) => {
-        parts.push(`${j.job_title} at ${j.company}`);
-        if (j.description) parts.push(j.description);
-        j.achievements?.forEach((a) => a && parts.push(a));
-      });
-    }
-    if (data.education?.length) {
-      parts.push('Education');
-      data.education.forEach((e) => parts.push(`${e.degree} ${e.field_of_study} ${e.institution}`));
-    }
-    if (data.skills?.length) {
-      parts.push('Skills');
-      parts.push(data.skills.map((s) => s.name).join(', '));
-    }
-    if (data.certifications?.length) {
-      parts.push('Certifications');
-      data.certifications.forEach((c) => parts.push(c.name));
-    }
-    return parts.join('\n');
-  };
+  // Build a plain text representation of the resume for ATS scoring.
+  // Delegates to the shared lib so the builder, the public /ats-checker, the
+  // dashboard card, and the resume-import flow all score identically.
+  const buildResumeText = (data: ResumeData): string => resumeDataToText(data);
 
   const handleSave = async () => {
     try {
-      // Calculate ATS score from current resume data
+      // Compute the ATS score locally from the current resume data.
+      // Previously this was a network round-trip to /api/ats/check — but
+      // the scoring logic is pure client-side (no LLM calls), so we can
+      // compute synchronously from the shared lib and avoid the extra RTT.
       let ats_score: number | undefined;
       try {
-        const resumeText = buildResumeText(resumeData);
-        if (resumeText.trim().length >= 50) {
-          const atsRes = await fetch('/api/ats/check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ resumeText }),
-          });
-          if (atsRes.ok) {
-            const atsData = await atsRes.json();
-            ats_score = atsData.overall_score;
-          }
+        const text = buildResumeText(resumeData);
+        if (text.trim().length >= 50) {
+          ats_score = scoreResume(resumeData);
         }
       } catch { /* ATS scoring is non-critical */ }
 

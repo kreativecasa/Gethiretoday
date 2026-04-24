@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { getAnthropicClient } from '@/lib/ai';
+import { scoreResume } from '@/lib/ats';
 import type { ResumeData } from '@/types';
 
 export const runtime = 'nodejs';
@@ -261,6 +262,11 @@ export async function POST(req: NextRequest) {
       ? `${data.contact.full_name}'s Resume`
       : 'Imported Resume';
 
+    // Seed the ATS score so the dashboard card shows a real number from the
+    // moment the import completes, instead of a dash until the user clicks
+    // Save in the builder.
+    const initialAts = scoreResume(data);
+
     const { data: resume, error: insertErr } = await supabase
       .from('resumes')
       .insert({
@@ -268,6 +274,7 @@ export async function POST(req: NextRequest) {
         title,
         template_id: templateId,
         data,
+        ats_score: initialAts,
         color_scheme: 'teal',
         font_size: 'medium',
         is_public: false,

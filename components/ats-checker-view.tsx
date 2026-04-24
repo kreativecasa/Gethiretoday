@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Target,
@@ -17,7 +17,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ATSCheckResult } from "@/types";
+import { ATSCheckResult, ResumeData } from "@/types";
+import { resumeDataToText } from "@/lib/ats";
+
+interface SavedResume {
+  id: string;
+  title: string;
+  data: ResumeData;
+  ats_score: number | null;
+}
 
 // ─── Score Circle ─────────────────────────────────────────────────────────────
 
@@ -178,6 +186,49 @@ export default function AtsCheckerView() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"resume" | "job">("resume");
 
+  // Authenticated users: list of their saved resumes and which one (if any)
+  // they've selected to analyze. When a resume is picked we auto-fill the
+  // text field with its content and save the score back on Analyze.
+  const [savedResumes, setSavedResumes] = useState<SavedResume[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+
+  // Try to load the user's saved resumes. Returns 401 for anonymous visitors
+  // on the public /ats-checker page — we silently ignore and fall back to
+  // the paste-your-text flow.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/resume', { cache: 'no-store' });
+        if (!res.ok) return;
+        const { resumes } = await res.json();
+        if (cancelled) return;
+        const list: SavedResume[] = Array.isArray(resumes)
+          ? resumes.map((r: { id: string; title: string; data: ResumeData; ats_score: number | null }) => ({
+              id: r.id,
+              title: r.title,
+              data: r.data,
+              ats_score: r.ats_score,
+            }))
+          : [];
+        setSavedResumes(list);
+      } catch {
+        /* not signed in, or network blip — paste-your-text still works */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSelectResume = (id: string) => {
+    setSelectedResumeId(id);
+    const picked = savedResumes.find((r) => r.id === id);
+    if (picked?.data) {
+      setResumeText(resumeDataToText(picked.data));
+    }
+  };
+
   const handleAnalyze = async () => {
     const trimmed = resumeText.trim();
     if (!trimmed) {
@@ -225,6 +276,16 @@ export default function AtsCheckerView() {
         return;
       }
       setResult(data);
+
+      // If the user analyzed a saved resume, write the fresh score back so
+      // the dashboard card stays in sync with what we just showed here.
+      if (selectedResumeId) {
+        fetch(`/api/resume/${selectedResumeId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ats_score: data.overall_score }),
+        }).catch(() => { /* non-critical — score is still shown in this view */ });
+      }
     } catch (err) {
       // Network / fetch-level failure (offline, CORS, DNS, etc.)
       setError(
@@ -266,13 +327,51 @@ export default function AtsCheckerView() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Input */}
             <div className="lg:col-span-3 space-y-5">
+              {/* Resume picker — visible only for signed-in users with saved
+                  resumes. Lets them pick which resume to score instead of
+                  pasting raw text. The score saves back to that resume. */}
+              {savedResumes.length > 0 && (
+                <div className="rounded-xl border border-teal-100 bg-teal-50/40 p-4">
+                  <Label htmlFor="resume-picker" className="text-sm font-semibold text-slate-800 mb-2 block">
+                    Analyze a saved resume
+                  </Label>
+                  <div className="relative">
+                    <select
+                      id="resume-picker"
+                      value={selectedResumeId ?? ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleSelectResume(e.target.value);
+                        } else {
+                          setSelectedResumeId(null);
+                          setResumeText('');
+                        }
+                      }}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 focus:border-[#4AB7A6] focus:outline-none focus:ring-2 focus:ring-[#4AB7A6]/20"
+                    >
+                      <option value="">— Pick a resume —</option>
+                      {savedResumes.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.title}
+                          {r.ats_score != null ? `  (last score: ${r.ats_score}%)` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    The resume text will auto-fill below. Your saved score updates after you analyze.
+                  </p>
+                </div>
+              )}
+
               <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
                 {(["resume", "job"] as const).map((tab) => (
                   <button key={tab} onClick={() => setActiveTab(tab)}
                     className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                   >
                     {tab === "resume"
-                      ? <span className="flex items-center justify-center gap-1.5"><FileText size={14} />Paste Resume Text</span>
+                      ? <span className="flex items-center justify-center gap-1.5"><FileText size={14} />{savedResumes.length > 0 ? 'Resume Text' : 'Paste Resume Text'}</span>
                       : <span className="flex items-center justify-center gap-1.5"><Target size={14} />Paste Job Description</span>}
                   </button>
                 ))}
@@ -281,7 +380,19 @@ export default function AtsCheckerView() {
               {activeTab === "resume" ? (
                 <div>
                   <Label htmlFor="resume-text" className="text-sm font-semibold text-slate-700 mb-2 block">Resume Text <span className="text-red-500">*</span></Label>
-                  <Textarea id="resume-text" placeholder="Copy and paste the plain text content of your resume here..." value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={14} className="font-mono text-sm resize-none rounded-xl border-slate-200 focus:border-[#4AB7A6] focus:ring-[#4AB7A6]" />
+                  <Textarea
+                    id="resume-text"
+                    placeholder="Copy and paste the plain text content of your resume here..."
+                    value={resumeText}
+                    onChange={(e) => {
+                      setResumeText(e.target.value);
+                      // User is typing their own text now — don't save the
+                      // score back to whichever resume was previously picked.
+                      if (selectedResumeId) setSelectedResumeId(null);
+                    }}
+                    rows={14}
+                    className="font-mono text-sm resize-none rounded-xl border-slate-200 focus:border-[#4AB7A6] focus:ring-[#4AB7A6]"
+                  />
                   <p className="text-xs text-slate-400 mt-1.5">{resumeText.length} characters · {resumeText.trim().split(/\s+/).filter(Boolean).length} words</p>
                 </div>
               ) : (
