@@ -198,7 +198,7 @@ export function resumeDataToText(data: ResumeData): string {
     }
   }
 
-  if (Array.isArray(data.skills) && data.skills.length) {}
+  if (Array.isArray(data.skills) && data.skills.length) {
     parts.push('Skills');
     parts.push(data.skills.map((s) => s.name).filter(Boolean).join(', '));
   }
