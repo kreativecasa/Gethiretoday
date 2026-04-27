@@ -3,7 +3,7 @@
 ## 1. Ship the code
 
 ```bash
-cd ~/Desktop/Gethiretoday && \
+cd ~/Desktop/hiredtodayapp && \
 find .git -name "*.lock" -delete && \
 git add \
   DEPLOY_NEXT.md \
@@ -21,13 +21,13 @@ The in-page cancel works by calling Gumroad's API directly instead of redirectin
 1. **Create a Gumroad access token:**
    - Open https://gumroad.com/settings/advanced
    - Scroll to **Applications** → click **Create application**
-   - Fill in any name (e.g. "GetHiredToday Server") and redirect URL `https://hiredtodayapp.com` (unused, but required)
+   - Fill in any name (e.g. "HiredTodayApp Server") and redirect URL `https://hiredtodayapp.com` (unused, but required)
    - Click **Create**
    - On the resulting page, click **Generate access token**
    - Copy the token that starts with something like `ght_...` or a similar Gumroad format
 
 2. **Add it to Vercel:**
-   - Open https://vercel.com/kreativecasaentertainment-3739s-projects/gethiretoday/settings/environment-variables
+   - Open https://vercel.com/kreativecasaentertainment-3739s-projects/hiredtodayapp/settings/environment-variables
    - Click **Add Environment Variable**
    - Name: `GUMROAD_ACCESS_TOKEN`
    - Value: the token from step 1

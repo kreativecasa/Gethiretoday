@@ -8,10 +8,10 @@ import PricingFAQ from "@/components/pricing-faq";
 
 export const metadata: Metadata = {
   title: "Pricing — Simple Plans for Every Job Seeker",
-  description: "GetHiredToday is free to start. Upgrade to Pro for unlimited resumes, all templates, PDF downloads, full AI writing, and ATS checking. Cancel anytime.",
+  description: "HiredTodayApp is free to start. Upgrade to Pro for unlimited resumes, all templates, PDF downloads, full AI writing, and ATS checking. Cancel anytime.",
   alternates: { canonical: "https://hiredtodayapp.com/pricing" },
   openGraph: {
-    title: "Pricing — Simple Plans for Every Job Seeker | GetHiredToday",
+    title: "Pricing — Simple Plans for Every Job Seeker | HiredTodayApp",
     description: "Free plan available. Pro plan unlocks unlimited resumes, AI writing, PDF downloads, and full ATS checking.",
     url: "https://hiredtodayapp.com/pricing",
   },

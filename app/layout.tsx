@@ -12,8 +12,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://hiredtodayapp.com"),
   title: {
-    default: "Free AI Resume Builder — Get Hired Today | GetHiredToday",
-    template: "%s | GetHiredToday",
+    default: "Free AI Resume Builder — Get Hired Today | HiredTodayApp",
+    template: "%s | HiredTodayApp",
   },
   description:
     "Build an ATS-friendly resume in 3 minutes with AI. Free to start. Tailored bullet points, professional templates, and an ATS checker that gets you past the bots and in front of real recruiters.",
@@ -22,25 +22,25 @@ export const metadata: Metadata = {
     "AI resume writer", "ATS checker", "resume templates 2026", "cover letter builder",
     "professional resume", "resume builder free", "online resume builder", "CV builder",
   ],
-  authors: [{ name: "GetHiredToday", url: "https://hiredtodayapp.com" }],
-  creator: "GetHiredToday",
-  publisher: "GetHiredToday",
+  authors: [{ name: "HiredTodayApp", url: "https://hiredtodayapp.com" }],
+  creator: "HiredTodayApp",
+  publisher: "HiredTodayApp",
   alternates: { canonical: "https://hiredtodayapp.com" },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://hiredtodayapp.com",
-    siteName: "GetHiredToday",
+    siteName: "HiredTodayApp",
     title: "Free AI Resume Builder — Get Hired Today",
     description: "Build an ATS-friendly resume in 3 minutes with AI. Tailored bullet points, professional templates, and ATS compatibility checking. Free to start.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "GetHiredToday — Free AI Resume Builder" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "HiredTodayApp — Free AI Resume Builder" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Free AI Resume Builder — Get Hired Today",
     description: "Build an ATS-friendly resume in 3 minutes with AI. Free to start.",
     images: ["/og-image.png"],
-    creator: "@gethiretoday",
+    creator: "@hiredtodayapp",
   },
   robots: {
     index: true,
@@ -73,7 +73,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "GetHiredToday",
+            "name": "HiredTodayApp",
             "url": "https://hiredtodayapp.com",
             "logo": "https://hiredtodayapp.com/og-image.png",
             "description": "AI-powered resume builder that helps job seekers create ATS-friendly resumes and land more interviews.",
@@ -86,7 +86,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "GetHiredToday AI Resume Builder",
+            "name": "HiredTodayApp AI Resume Builder",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "url": "https://hiredtodayapp.com",

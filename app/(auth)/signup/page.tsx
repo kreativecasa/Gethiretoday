@@ -217,7 +217,7 @@ function SignupForm() {
 
     setSuccess(true);
     try {
-      sessionStorage.setItem('dashboard_toast', 'Account created! Welcome to GetHiredToday.');
+      sessionStorage.setItem('dashboard_toast', 'Account created! Welcome to HiredTodayApp.');
     } catch {}
     setTimeout(() => {
       router.push('/dashboard');

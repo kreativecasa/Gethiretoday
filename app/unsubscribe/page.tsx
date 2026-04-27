@@ -61,7 +61,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
         )}
 
         <Link href="/" className="inline-block text-sm text-teal hover:underline font-semibold">
-          ← Back to GetHiredToday
+          ← Back to HiredTodayApp
         </Link>
       </div>
     </main>

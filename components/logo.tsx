@@ -1,5 +1,5 @@
 /**
- * GetHiredToday brand mark + wordmark.
+ * HiredTodayApp brand mark + wordmark.
  *
  * Single source of truth for the logo — used in navbar, footer, dashboard
  * sidebar, auth pages, and anywhere else the brand appears. Keep the typography
@@ -118,7 +118,7 @@ export default function Logo({
     <Link
       href={href}
       className="inline-flex items-center"
-      aria-label="GetHiredToday — home"
+      aria-label="HiredTodayApp — home"
       style={{ lineHeight: 1 }}
     >
       {inner}
