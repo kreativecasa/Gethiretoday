@@ -128,7 +128,7 @@ export default function ExecutiveTemplate({ data, colorScheme = 'purple', fontSi
             <>
               <div style={{ fontSize: fs.xs, fontWeight: 800, color: c.bg, textTransform: 'uppercase' as const, letterSpacing: '0.1em', margin: '14px 0 8px' }}>Core Skills</div>
               <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '5px' }}>
-                {d.skills.map((s) => (
+                {d.skills?.map((s) => (
                   <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 8px', border: `1px solid ${c.bg}30`, borderRadius: '4px', color: c.bg, fontWeight: 600 }}>{s.name}</span>
                 ))}
               </div>

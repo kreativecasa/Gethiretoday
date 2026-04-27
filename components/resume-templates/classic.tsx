@@ -121,7 +121,7 @@ export default function ClassicTemplate({ data, colorScheme = 'teal', fontSize =
           <>
             <Sec title="Skills" />
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-              {d.skills.map((s) => (
+              {d.skills?.map((s) => (
                 <span key={s.id} style={{ fontSize: fs.xs, padding: '4px 11px', borderRadius: '20px', background: c.light, color: c.p, fontWeight: 600, border: `1px solid ${c.p}30` }}>{s.name}</span>
               ))}
             </div>

@@ -107,7 +107,7 @@ export default function SimpleTemplate({ data, colorScheme = 'blue', fontSize = 
         <>
           <Sec title="Skills" />
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '5px' }}>
-            {d.skills.map((s) => (
+            {d.skills?.map((s) => (
               <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 10px', background: '#f1f5f9', color: c.dark, fontWeight: 600, borderRadius: '3px', border: `1px solid #e2e8f0` }}>{s.name}</span>
             ))}
           </div>

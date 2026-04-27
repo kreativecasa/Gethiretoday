@@ -200,7 +200,7 @@ export function resumeDataToText(data: ResumeData): string {
 
   if (data.skills?.length) {
     parts.push('Skills');
-    parts.push(data.skills.map((s) => s.name).filter(Boolean).join(', '));
+    parts.push(data.skills?.map((s) => s.name).filter(Boolean).join(', '));
   }
 
   if (data.certifications?.length) {

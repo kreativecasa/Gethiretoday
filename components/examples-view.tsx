@@ -198,7 +198,7 @@ export default function ExamplesView() {
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${levelColors[ex.level]}`}>{ex.level}</span>
                       </div>
                       <div className="flex flex-wrap gap-1 mb-3 flex-1">
-                        {ex.skills.map((skill) => (
+                        {ex.skills?.map((skill) => (
                           <span key={skill} className="inline-flex items-center text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">{skill}</span>
                         ))}
                       </div>

@@ -178,7 +178,7 @@ function ResumePreview({ data, template }: { data: ResumeData; template: string 
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Skills</div>
           <div className="flex flex-wrap gap-1.5">
-            {data.skills.map((skill) => (
+            {data.skills?.map((skill) => (
               <span
                 key={skill.id}
                 className="px-2 py-0.5 rounded text-[10px] font-medium"
@@ -413,7 +413,7 @@ function ResumeEditorInner() {
   const updateSkill = (id: string, field: keyof Skill, val: string) => {
     update(
       "skills",
-      resume.skills.map((s) => (s.id === id ? { ...s, [field]: val } : s))
+      resume.skills?.map((s) => (s.id === id ? { ...s, [field]: val } : s))
     );
   };
 
@@ -747,7 +747,7 @@ function ResumeEditorInner() {
             {/* Skills */}
             <Section title="Skills" defaultOpen={false}>
               <div className="mt-4 space-y-2">
-                {resume.skills.map((skill) => (
+                {resume.skills?.map((skill) => (
                   <div key={skill.id} className="flex items-center gap-2">
                     <input
                       className={`${inputCls} flex-1`}

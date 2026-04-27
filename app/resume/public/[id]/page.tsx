@@ -146,7 +146,7 @@ export default async function PublicResumePage({ params }: { params: Promise<{ i
         {d.skills && d.skills.length > 0 && (
           <Section title="Skills" accent={accent}>
             <div className="flex flex-wrap gap-2">
-              {d.skills.map((s: Skill, i: number) => (
+              {d.skills?.map((s: Skill, i: number) => (
                 <span key={i} className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
                   {s.name}
                 </span>

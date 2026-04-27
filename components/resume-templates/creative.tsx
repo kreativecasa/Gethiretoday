@@ -88,7 +88,7 @@ export default function CreativeTemplate({ data, colorScheme = 'rose', fontSize 
           {d.skills.length > 0 && (
             <>
               <SideHeading title="Skills" />
-              {d.skills.map((s) => (
+              {d.skills?.map((s) => (
                 <div key={s.id} style={{ marginBottom: '8px' }}>
                   <div style={{ fontSize: fs.xs, color: 'rgba(255,255,255,0.9)', marginBottom: '3px', fontWeight: 500 }}>{s.name}</div>
                   <div style={{ height: '3px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }}>

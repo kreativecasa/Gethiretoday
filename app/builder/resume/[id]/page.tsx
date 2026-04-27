@@ -1614,7 +1614,7 @@ function SkillsSection({
   const updateSkillLevel = (id: string, level: Skill['level']) => {
     setResumeData((prev) => ({
       ...prev,
-      skills: prev.skills.map((s) => (s.id === id ? { ...s, level } : s)),
+      skills: prev.skills?.map((s) => (s.id === id ? { ...s, level } : s)),
     }));
   };
 
@@ -1658,7 +1658,7 @@ function SkillsSection({
           )}
 
           <div className="flex flex-wrap gap-2">
-            {data.skills.map((skill) => (
+            {data.skills?.map((skill) => (
               <div
                 key={skill.id}
                 className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 rounded-full pl-3 pr-1 py-1"
