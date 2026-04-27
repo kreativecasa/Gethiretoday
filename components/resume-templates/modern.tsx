@@ -74,7 +74,7 @@ export default function ModernTemplate({ data, colorScheme = 'teal', fontSize = 
         {d.skills.length > 0 && (
           <>
             <SideSection title="Skills" />
-            {d.skills?.map((s) => (
+            {d.skills.map((s) => (
               <div key={s.id} style={{ marginBottom: '7px' }}>
                 <div style={{ fontSize: fs.xs, color: 'rgba(255,255,255,0.85)', marginBottom: '3px' }}>{s.name}</div>
                 <div style={{ height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', overflow: 'hidden' }}>

@@ -103,7 +103,7 @@ function withSample(c?: PreviewContent): Required<PreviewContent> {
     summary: c?.summary || SAMPLE.summary,
     experiences: c?.experiences?.length ? c.experiences : SAMPLE.experiences,
     education: c?.education?.length ? c.education : SAMPLE.education,
-    skills: c?.skills?.length ? c.skills : SAMPLE.skills,
+    skills: Array.isArray(c?.skills) && c.skills.length > 0 ? c.skills : SAMPLE.skills,
   };
 }
 

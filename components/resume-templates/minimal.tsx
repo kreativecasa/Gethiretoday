@@ -104,7 +104,7 @@ export default function MinimalTemplate({ data, colorScheme = 'slate', fontSize 
         <>
           <Sec title="Skills" />
           <div style={{ fontFamily: 'Arial, sans-serif' }}>
-            {d.skills?.map((s, i) => (
+            {d.skills.map((s, i) => (
               <span key={s.id} style={{ fontSize: fs.sm, color: '#374151' }}>
                 {s.name}{i < d.skills.length - 1 ? <span style={{ color: '#9ca3af' }}>  ·  </span> : ''}
               </span>

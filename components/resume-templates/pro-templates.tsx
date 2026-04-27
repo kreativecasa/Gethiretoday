@@ -133,7 +133,7 @@ export function BoldHeaderTemplate({ data, colorScheme = 'teal', fontSize = 'med
             <section>
               <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: c.accent, margin: '0 0 6px' }}>Skills</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                {d.skills?.map((s) => (
+                {d.skills.map((s) => (
                   <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 9px', background: c.accent, color: '#fff', fontWeight: 600, borderRadius: '999px' }}>{s.name}</span>
                 ))}
               </div>
@@ -206,7 +206,7 @@ export function SplitRightTemplate({ data, colorScheme = 'blue', fontSize = 'med
           <section style={{ marginBottom: '18px' }}>
             <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: c.dark, margin: '0 0 6px' }}>Skills</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {d.skills?.map((s) => <div key={s.id} style={{ fontSize: fs.sm, color: '#374151' }}>{s.name}</div>)}
+              {d.skills.map((s) => <div key={s.id} style={{ fontSize: fs.sm, color: '#374151' }}>{s.name}</div>)}
             </div>
           </section>
         )}
@@ -295,7 +295,7 @@ export function TimelineTemplate({ data, colorScheme = 'purple', fontSize = 'med
           <section>
             <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: c.dark, margin: '0 0 6px' }}>Skills</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-              {d.skills?.map((s) => (
+              {d.skills.map((s) => (
                 <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 9px', color: c.dark, border: `1px solid ${c.accent}`, fontWeight: 600, borderRadius: '999px' }}>{s.name}</span>
               ))}
             </div>
@@ -360,7 +360,7 @@ export function MonoTemplate({ data, colorScheme = 'teal', fontSize = 'medium' }
         <section style={{ marginBottom: '14px' }}>
           <h2 style={{ fontFamily: mono, fontSize: fs.xs, color: c.accent, fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 6px' }}>/* STACK */</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontFamily: mono }}>
-            {d.skills?.map((s) => (
+            {d.skills.map((s) => (
               <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 8px', border: `1px solid ${c.accent}`, color: c.dark, borderRadius: '3px', fontWeight: 600 }}>{s.name}</span>
             ))}
           </div>
@@ -459,7 +459,7 @@ export function PhotoCardTemplate({ data, colorScheme = 'blue', fontSize = 'medi
             <section>
               <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: c.dark, margin: '0 0 6px' }}>Skills</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                {d.skills?.map((s) => (
+                {d.skills.map((s) => (
                   <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 9px', background: c.soft, color: c.dark, fontWeight: 600, borderRadius: '999px' }}>{s.name}</span>
                 ))}
               </div>
@@ -533,7 +533,7 @@ export function CompactTemplate({ data, colorScheme = 'slate', fontSize = 'mediu
         {d.skills.length > 0 && (
           <section>
             <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#0f172a', margin: '0 0 4px' }}>Skills</h2>
-            <div style={{ fontSize: fs.sm, color: '#374151' }}>{d.skills?.map((s) => s.name).join(' · ')}</div>
+            <div style={{ fontSize: fs.sm, color: '#374151' }}>{d.skills.map((s) => s.name).join(' · ')}</div>
           </section>
         )}
       </div>
@@ -606,7 +606,7 @@ export function SerifTemplate({ data, colorScheme = 'slate', fontSize = 'medium'
       {d.skills.length > 0 && (
         <section>
           <h2 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: fs.lg, color: c.accent, fontWeight: 600, margin: '0 0 6px' }}>Skills</h2>
-          <div style={{ textAlign: 'center', fontStyle: 'italic', fontSize: fs.sm, color: '#374151', lineHeight: 1.7 }}>{d.skills?.map((s) => s.name).join(' · ')}</div>
+          <div style={{ textAlign: 'center', fontStyle: 'italic', fontSize: fs.sm, color: '#374151', lineHeight: 1.7 }}>{d.skills.map((s) => s.name).join(' · ')}</div>
         </section>
       )}
     </div>
@@ -683,7 +683,7 @@ export function SplitAccentTemplate({ data, colorScheme = 'purple', fontSize = '
             <section>
               <h2 style={{ fontSize: fs.xs, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: c.dark, margin: '0 0 6px' }}>Skills</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                {d.skills?.map((s) => (
+                {d.skills.map((s) => (
                   <span key={s.id} style={{ fontSize: fs.xs, padding: '3px 9px', background: c.soft, color: c.dark, fontWeight: 600, borderRadius: '999px' }}>{s.name}</span>
                 ))}
               </div>

@@ -123,7 +123,7 @@ export function exampleToResumeData(ex: ResumeExample): ResumeData {
     achievements: ex.sampleExperience.bullets,
   };
 
-  const skills: Skill[] = ex.skills?.map((name, i) => ({
+  const skills: Skill[] = ex.skills.map((name, i) => ({
     id: `skill-${i}`,
     name,
     category: 'Technical',
