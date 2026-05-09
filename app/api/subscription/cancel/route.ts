@@ -19,7 +19,7 @@ let _adminClient: SupabaseClient | null = null;
 function getAdminClient(): SupabaseClient | null {
   if (!_adminClient) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_KEY;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) return null;
     _adminClient = createClient(url, key);
   }
