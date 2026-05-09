@@ -533,25 +533,118 @@ export default function ResumeBuilderPage() {
         pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidth, imgHeightMm, undefined, 'FAST');
       } else {
         // Multi-page case — slice the source image into A4-sized pages.
+        //
+        // Two bugs the previous slicer had:
+        //   1. The slicing canvas was always pageHeightPx tall, even on the
+        //      final page where the slice was shorter. We then exported the
+        //      whole canvas (with white padding) but told jsPDF to render it
+        //      at the proportional height of just the slice content — which
+        //      vertically squeezed the entire image, producing a thick
+        //      stretched/distorted band at the bottom of the last page.
+        //      Fix: size the slice canvas to the actual slice each page so
+        //      source PNG and destination box share an aspect ratio.
+        //
+        //   2. The cut was always at exactly pageHeightPx, which can land in
+        //      the middle of a line of body text. The result: the bottom of
+        //      one page and the top of the next each show half a row of
+        //      glyphs.
+        //      Fix: scan the rasterized resume for a "safe" break — a row
+        //      in the content area that's all whitespace — and slice there
+        //      instead. Whitespace gaps between paragraphs and sections are
+        //      usually 4–8px tall at pixelRatio:3, so a small lookback is
+        //      enough to land cleanly without losing real content.
+
         const pageHeightPx = (pageHeight * img.width) / pageWidth;
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = Math.ceil(pageHeightPx);
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('2D canvas unavailable');
+        const MAX_BREAK_LOOKBACK = Math.max(40, Math.floor(pageHeightPx * 0.06));
+
+        // Scanner canvas — rasterized full image so we can read pixel rows.
+        // willReadFrequently keeps Chrome from optimizing the canvas for GPU
+        // compositing, which would otherwise make getImageData slow.
+        const scanCanvas = document.createElement('canvas');
+        scanCanvas.width = img.width;
+        scanCanvas.height = img.height;
+        const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+        if (!scanCtx) throw new Error('2D canvas unavailable');
+        scanCtx.drawImage(img, 0, 0);
+
+        // Returns true if the central 50% of pixels in row `rowY` are all
+        // close to white. We scan the middle band rather than the whole row
+        // because sidebar templates have a dark column on one side that
+        // continues across every row — the middle band is content area in
+        // every layout we ship, so this works for both classic and sidebar
+        // designs without per-template logic.
+        const sampleStartX = Math.floor(img.width * 0.25);
+        const sampleWidth = Math.max(1, Math.floor(img.width * 0.5));
+        const isContentRowEmpty = (rowY: number): boolean => {
+          if (rowY < 0 || rowY >= img.height) return false;
+          const row = scanCtx.getImageData(sampleStartX, rowY, sampleWidth, 1).data;
+          for (let i = 0; i < row.length; i += 4) {
+            if (row[i] < 240 || row[i + 1] < 240 || row[i + 2] < 240) return false;
+          }
+          return true;
+        };
+
+        // From `desiredEnd`, walk back up to MAX_BREAK_LOOKBACK rows looking
+        // for a row we can safely cut on. Returns the original value if no
+        // clean break is found, so we never get stuck.
+        const findSafeBreak = (desiredEnd: number, minEnd: number): number => {
+          for (
+            let testY = desiredEnd;
+            testY >= Math.max(minEnd, desiredEnd - MAX_BREAK_LOOKBACK);
+            testY--
+          ) {
+            if (isContentRowEmpty(testY)) return testY;
+          }
+          return desiredEnd;
+        };
 
         let y = 0;
         let pageIndex = 0;
         while (y < img.height) {
-          const sliceHeight = Math.min(pageHeightPx, img.height - y);
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, y, img.width, sliceHeight, 0, 0, img.width, sliceHeight);
-          const sliceUrl = canvas.toDataURL('image/png');
+          // Default slice fills a whole page (or whatever's left on the
+          // last page).
+          let sliceHeight = Math.min(pageHeightPx, img.height - y);
+
+          // For every page except the last, look for a cleaner break point
+          // a little above the desired end so we don't bisect a line of
+          // text. Floor at 80% of pageHeightPx so we never produce a tiny
+          // page.
+          const isLastPage = y + sliceHeight >= img.height;
+          if (!isLastPage) {
+            const desiredEnd = y + sliceHeight;
+            const minEnd = y + Math.floor(pageHeightPx * 0.8);
+            const safeEnd = findSafeBreak(desiredEnd, minEnd);
+            sliceHeight = safeEnd - y;
+          }
+
+          // Slice canvas matches the EXACT slice height so the exported PNG
+          // and the PDF destination rectangle share the same aspect ratio.
+          // No white padding, no vertical squeeze.
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = img.width;
+          sliceCanvas.height = Math.ceil(sliceHeight);
+          const sliceCtx = sliceCanvas.getContext('2d');
+          if (!sliceCtx) throw new Error('2D canvas unavailable');
+          sliceCtx.fillStyle = '#ffffff';
+          sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+          sliceCtx.drawImage(
+            img,
+            0,
+            y,
+            img.width,
+            sliceHeight,
+            0,
+            0,
+            img.width,
+            sliceHeight
+          );
+
+          const sliceUrl = sliceCanvas.toDataURL('image/png');
           if (pageIndex > 0) pdf.addPage();
           const sliceHeightMm = (sliceHeight * pageWidth) / img.width;
           pdf.addImage(sliceUrl, 'PNG', 0, 0, pageWidth, sliceHeightMm, undefined, 'FAST');
-          y += pageHeightPx;
+
+          y += sliceHeight;
           pageIndex += 1;
         }
       }

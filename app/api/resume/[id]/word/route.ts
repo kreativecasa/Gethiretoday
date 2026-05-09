@@ -62,9 +62,16 @@ function renderHtml(title: string, data: ResumeData): string {
     .join(' · ');
 
   // Optional profile photo (appears at top-right if set). Base64 data URIs
-  // embed directly; http(s) URLs are inlined via <img src>.
-  const photoHtml = c.photo_url
-    ? `<img src="${esc(c.photo_url)}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:50%;float:right;margin-left:16px;" />`
+  // embed directly; http(s) URLs are inlined via <img src>. We render the
+  // header as a 2-column table so Word lays the photo and name out side by
+  // side reliably; older `float:right` versions occasionally got pushed to
+  // their own page in Word 2016 / Pages, leaving a stretched empty band at
+  // the top of the document.
+  const photoCellHtml = c.photo_url
+    ? `<td style="padding:0 0 0 12px;width:80px;vertical-align:top;text-align:right;">
+         <img src="${esc(c.photo_url)}" alt="" width="80" height="80"
+              style="width:80px;height:80px;object-fit:cover;border-radius:50%;display:block;" />
+       </td>`
     : '';
 
   // ── Work experience ──
@@ -73,11 +80,12 @@ function renderHtml(title: string, data: ResumeData): string {
       (j: WorkExperience) => `
 <div style="page-break-inside:avoid;margin-top:12px;">
   <h3 style="margin:0 0 2px;font-size:14px;">${esc(j.job_title || '')}</h3>
-  <div style="font-size:11px;color:#666;">
-    <span>${esc(j.company || '')}${j.location ? ` · ${esc(j.location)}` : ''}</span>
-    <span style="float:right;">${dateRange(j.start_date, j.end_date, j.is_current)}</span>
-  </div>
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:11px;color:#666;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;">${esc(j.company || '')}${j.location ? ` · ${esc(j.location)}` : ''}</td>
+      <td style="padding:0;text-align:right;white-space:nowrap;">${dateRange(j.start_date, j.end_date, j.is_current)}</td>
+    </tr>
+  </table>
   ${j.description ? `<p style="font-size:12px;margin:4px 0;">${esc(j.description)}</p>` : ''}
   ${
     j.achievements && j.achievements.length
@@ -97,11 +105,12 @@ function renderHtml(title: string, data: ResumeData): string {
       (e: Education) => `
 <div style="margin:8px 0;page-break-inside:avoid;">
   <div style="font-weight:bold;font-size:13px;">${esc(e.degree || '')}${e.field_of_study ? ` in ${esc(e.field_of_study)}` : ''}</div>
-  <div style="font-size:11px;color:#666;">
-    ${esc(e.institution || '')}${e.location ? ` · ${esc(e.location)}` : ''}
-    <span style="float:right;">${dateRange(e.start_date, e.end_date, e.is_current)}</span>
-  </div>
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:11px;color:#666;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;">${esc(e.institution || '')}${e.location ? ` · ${esc(e.location)}` : ''}</td>
+      <td style="padding:0;text-align:right;white-space:nowrap;">${dateRange(e.start_date, e.end_date, e.is_current)}</td>
+    </tr>
+  </table>
   ${e.gpa ? `<div style="font-size:11px;color:#666;">GPA: ${esc(e.gpa)}</div>` : ''}
   ${e.description ? `<p style="font-size:12px;margin:2px 0 0;">${esc(e.description)}</p>` : ''}
 </div>`
@@ -155,15 +164,16 @@ function renderHtml(title: string, data: ResumeData): string {
     .map(
       (p: Project) => `
 <div style="margin:8px 0;page-break-inside:avoid;">
-  <div style="font-weight:bold;font-size:13px;">
-    ${esc(p.name || '')}${p.url ? ` <span style="font-weight:normal;font-size:11px;color:#4AB7A6;">· ${esc(p.url)}</span>` : ''}
-    ${
-      p.start_date || p.end_date
-        ? `<span style="float:right;font-weight:normal;font-size:11px;color:#666;">${dateRange(p.start_date, p.end_date, false)}</span>`
-        : ''
-    }
-  </div>
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;font-weight:bold;font-size:13px;">${esc(p.name || '')}${p.url ? ` <span style="font-weight:normal;font-size:11px;color:#4AB7A6;">· ${esc(p.url)}</span>` : ''}</td>
+      ${
+        p.start_date || p.end_date
+          ? `<td style="padding:0;text-align:right;white-space:nowrap;font-weight:normal;font-size:11px;color:#666;">${dateRange(p.start_date, p.end_date, false)}</td>`
+          : ''
+      }
+    </tr>
+  </table>
   ${p.description ? `<p style="font-size:12px;color:#444;margin:4px 0;">${esc(p.description)}</p>` : ''}
   ${
     p.technologies && p.technologies.length
@@ -188,11 +198,12 @@ function renderHtml(title: string, data: ResumeData): string {
       (v: VolunteerWork) => `
 <div style="margin:8px 0;page-break-inside:avoid;">
   <div style="font-weight:bold;font-size:13px;">${esc(v.role || '')}</div>
-  <div style="font-size:11px;color:#666;">
-    <span>${esc(v.organization || '')}</span>
-    <span style="float:right;">${dateRange(v.start_date, v.end_date, v.is_current)}</span>
-  </div>
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:11px;color:#666;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;">${esc(v.organization || '')}</td>
+      <td style="padding:0;text-align:right;white-space:nowrap;">${dateRange(v.start_date, v.end_date, v.is_current)}</td>
+    </tr>
+  </table>
   ${v.description ? `<p style="font-size:12px;margin:4px 0;">${esc(v.description)}</p>` : ''}
 </div>`
     )
@@ -209,11 +220,12 @@ ${renderSection(
     .map(
       (item) => `
 <div style="margin:6px 0;page-break-inside:avoid;">
-  <div style="font-weight:bold;font-size:13px;">
-    ${esc(item.title || '')}
-    ${item.date ? `<span style="float:right;font-weight:normal;font-size:11px;color:#666;">${esc(item.date)}</span>` : ''}
-  </div>
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="padding:0;font-weight:bold;font-size:13px;">${esc(item.title || '')}</td>
+      ${item.date ? `<td style="padding:0;text-align:right;white-space:nowrap;font-weight:normal;font-size:11px;color:#666;">${esc(item.date)}</td>` : ''}
+    </tr>
+  </table>
   ${item.subtitle ? `<div style="font-size:11px;color:#666;">${esc(item.subtitle)}</div>` : ''}
   ${item.description ? `<p style="font-size:12px;margin:4px 0;">${esc(item.description)}</p>` : ''}
 </div>`
@@ -241,19 +253,32 @@ ${renderSection(
   </xml>
   <![endif]-->
   <style>
-    body { font-family: Calibri, Arial, sans-serif; color: #222; margin: 40px; font-size: 12px; line-height: 1.5; }
-    h1 { font-size: 22px; margin: 0 0 6px 0; color: #111; }
+    /* @page is what Word actually reads for margins / page size. CSS body
+       margin is a fallback for browser-side preview only. Without @page
+       set explicitly, some Word builds default to ~25mm everything which
+       cropped photos/headers hugging the edge. */
+    @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+    body { font-family: Calibri, Arial, sans-serif; color: #222; margin: 0; font-size: 12px; line-height: 1.5; }
+    h1 { font-size: 22px; margin: 0 0 6px 0; color: #111; page-break-after: avoid; }
     h2 { page-break-after: avoid; }
-    h3 { page-break-after: avoid; }
-    ul { page-break-inside: avoid; }
+    h3 { page-break-after: avoid; page-break-inside: avoid; }
+    p { orphans: 3; widows: 3; }
+    li { page-break-inside: avoid; }
+    ul { page-break-inside: auto; }
     a { color: #4AB7A6; text-decoration: none; }
+    img { max-width: 100%; height: auto; }
   </style>
 </head>
 <body>
-  ${photoHtml}
-  <h1>${esc(name)}</h1>
-  ${contactLine ? `<p style="font-size:11px;color:#666;margin:0 0 6px 0;">${contactLine}</p>` : ''}
-  <div style="clear:both;"></div>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 6px 0;">
+    <tr>
+      <td style="padding:0;vertical-align:top;">
+        <h1>${esc(name)}</h1>
+        ${contactLine ? `<p style="font-size:11px;color:#666;margin:0;">${contactLine}</p>` : ''}
+      </td>
+      ${photoCellHtml}
+    </tr>
+  </table>
   ${data.summary ? renderSection('Summary', `<p style="font-size:12px;line-height:1.5;">${esc(data.summary)}</p>`) : ''}
   ${renderSection('Work Experience', workHtml)}
   ${renderSection('Education', eduHtml)}

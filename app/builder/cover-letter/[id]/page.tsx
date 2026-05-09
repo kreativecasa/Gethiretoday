@@ -225,22 +225,64 @@ export default function CoverLetterBuilderPage() {
     if (!previewRef.current) return;
     setDownloadingPdf(true);
     try {
-      const { toJpeg } = await import("html-to-image");
+      // Switched to PNG for the same reason the resume PDF did: at the
+      // sizes we render, html-to-image's JPEG encoder smudges anti-aliased
+      // text. PNG is lossless and the file is still small enough.
+      const { toPng } = await import("html-to-image");
       const jsPDF = (await import("jspdf")).default;
 
       const element = previewRef.current;
-      const dataUrl = await toJpeg(element, {
-        quality: 0.98,
-        pixelRatio: 2,
+      const dataUrl = await toPng(element, {
+        pixelRatio: 3,
         backgroundColor: "#ffffff",
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        cacheBust: true,
       });
 
-      // A4 in mm
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      // Add image to fill full A4 page
-      pdf.addImage(dataUrl, "JPEG", 0, 0, 210, 297);
+      // Decode the captured PNG so we can compute the natural aspect ratio.
+      // Previously we slammed the image into a fixed 210×297mm box, which
+      // stretched the page vertically when the captured element was shorter
+      // than a full A4 (e.g. a half-page cover letter), producing the same
+      // distorted-band artifact the resume PDF used to have.
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = dataUrl;
+      });
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const imgHeightMm = (img.height * pageWidth) / img.width;
+
+      if (imgHeightMm <= pageHeight + 1) {
+        // Render at natural size — no stretching.
+        pdf.addImage(dataUrl, "PNG", 0, 0, pageWidth, imgHeightMm, undefined, "FAST");
+      } else {
+        // Cover letter overflowed a single page (long signature, large
+        // letterhead, etc.) — slice into A4 pages with the same aspect-
+        // preserving approach the resume PDF uses.
+        const pageHeightPx = (pageHeight * img.width) / pageWidth;
+        let y = 0;
+        let pageIndex = 0;
+        while (y < img.height) {
+          const sliceHeight = Math.min(pageHeightPx, img.height - y);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = img.width;
+          sliceCanvas.height = Math.ceil(sliceHeight);
+          const sliceCtx = sliceCanvas.getContext("2d");
+          if (!sliceCtx) throw new Error("2D canvas unavailable");
+          sliceCtx.fillStyle = "#ffffff";
+          sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+          sliceCtx.drawImage(img, 0, y, img.width, sliceHeight, 0, 0, img.width, sliceHeight);
+          if (pageIndex > 0) pdf.addPage();
+          const sliceHeightMm = (sliceHeight * pageWidth) / img.width;
+          pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 0, 0, pageWidth, sliceHeightMm, undefined, "FAST");
+          y += sliceHeight;
+          pageIndex += 1;
+        }
+      }
+
       pdf.save(`${title || "cover-letter"}.pdf`);
     } catch (err) {
       console.error("PDF generation failed", err);
