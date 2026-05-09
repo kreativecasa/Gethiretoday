@@ -7,7 +7,6 @@ import {
   Download,
   FileText,
   Layout,
-  Target,
   ChevronRight,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
@@ -125,158 +124,60 @@ const blogPosts = [
    MOCK VISUALS
 ───────────────────────────────────────────────────────────────────────────── */
 
-function HeroResumeCard() {
+function HeroResumeCollage() {
+  const cards: { layout: TemplateLayout; accent: string; className: string; rotate: string }[] = [
+    {
+      layout: "sidebar",
+      accent: "#4AB7A6",
+      className: "absolute top-0 left-0 w-[58%] aspect-[3/4] z-20",
+      rotate: "rotate(-2deg)",
+    },
+    {
+      layout: "executive",
+      accent: "#0f172a",
+      className: "absolute top-4 right-0 w-[46%] aspect-[3/4] z-10",
+      rotate: "rotate(3deg)",
+    },
+    {
+      layout: "classic",
+      accent: "#0f172a",
+      className: "absolute bottom-0 left-[12%] w-[52%] aspect-[3/4] z-30",
+      rotate: "rotate(1deg)",
+    },
+    {
+      layout: "creative",
+      accent: "#34d399",
+      className: "absolute bottom-2 right-2 w-[44%] aspect-[3/4] z-20",
+      rotate: "rotate(-2deg)",
+    },
+  ];
+
   return (
-    <div className="relative w-full max-w-sm mx-auto select-none" aria-hidden="true">
-      {/* Main resume card */}
-      <div
-        className="relative rounded-2xl overflow-hidden"
-        style={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #e2e8f0",
-          transform: "rotate(1deg)",
-          boxShadow:
-            "0 40px 80px -20px rgba(15,23,42,0.18), 0 12px 32px -8px rgba(15,23,42,0.08), 0 0 0 1px rgba(226,232,240,0.5)",
-        }}
-      >
-        {/* Teal top accent bar with subtle gradient */}
+    <div
+      className="relative w-full max-w-[560px] mx-auto aspect-[5/4] select-none"
+      aria-hidden="true"
+    >
+      {cards.map((card, i) => (
         <div
-          className="h-2.5 rounded-t-2xl"
-          style={{ background: "linear-gradient(90deg, #3aa492 0%, #4AB7A6 50%, #5fd4c1 100%)" }}
-        />
-
-        {/* Name area */}
-        <div className="px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
-          <div className="text-xl font-bold text-slate-900 leading-tight tracking-tight">Alexandra Chen</div>
-          <div className="text-sm font-semibold mt-1" style={{ color: "#4AB7A6" }}>
-            Senior Product Manager
-          </div>
-          <div className="flex items-center gap-2.5 mt-2.5 text-[10px] text-slate-400">
-            <span>alex.chen@email.com</span>
-            <span className="text-slate-300">·</span>
-            <span>San Francisco</span>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="px-6 py-4 space-y-4">
-          {/* Work Experience */}
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#4AB7A6" }}>
-              Work Experience
-            </div>
-            <div className="flex items-baseline justify-between">
-              <div className="text-[11px] font-bold text-slate-900">Senior Product Manager</div>
-              <div className="text-[9px] text-slate-400 italic">2022 – Present</div>
-            </div>
-            <div className="text-[10px] font-medium mb-1.5" style={{ color: "#4AB7A6" }}>Stripe</div>
-            <div className="space-y-1">
-              <div className="flex gap-1.5 items-start">
-                <span className="text-[10px] leading-[1.35]" style={{ color: "#4AB7A6" }}>•</span>
-                <div className="flex-1 h-1.5 rounded-full" style={{ background: "linear-gradient(90deg, #e2e8f0 0%, #e2e8f0 85%, transparent 100%)" }} />
-              </div>
-              <div className="flex gap-1.5 items-start">
-                <span className="text-[10px] leading-[1.35]" style={{ color: "#4AB7A6" }}>•</span>
-                <div className="flex-1 h-1.5 rounded-full w-11/12" style={{ backgroundColor: "#e2e8f0" }} />
-              </div>
-              <div className="flex gap-1.5 items-start">
-                <span className="text-[10px] leading-[1.35]" style={{ color: "#4AB7A6" }}>•</span>
-                <div className="flex-1 h-1.5 rounded-full w-4/5" style={{ backgroundColor: "#e2e8f0" }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Education */}
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#4AB7A6" }}>
-              Education
-            </div>
-            <div className="flex items-baseline justify-between">
-              <div className="text-[11px] font-bold text-slate-900">B.S. Computer Science</div>
-              <div className="text-[9px] text-slate-400 italic">2019</div>
-            </div>
-            <div className="text-[10px] text-slate-500">Stanford University</div>
-          </div>
-
-          {/* Skills */}
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#4AB7A6" }}>
-              Skills
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {["Python", "Figma", "Analytics", "Leadership", "Agile"].map((skill) => (
-                <span
-                  key={skill}
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
-                  style={{
-                    backgroundColor: "#f0fdf9",
-                    color: "#0f766e",
-                    border: "1px solid #ccfbef",
-                  }}
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating badge — ATS Score (top right) */}
-      <div
-        className="absolute -top-3 -right-4 flex flex-col items-center gap-1 px-4 py-2.5 rounded-2xl"
-        style={{
-          backgroundColor: "#ffffff",
-          border: "1.5px solid #4AB7A6",
-          boxShadow: "0 8px 24px rgba(74,183,166,0.2)",
-          minWidth: "90px",
-        }}
-      >
-        <div className="text-xs font-semibold text-slate-500">ATS Score</div>
-        <div className="text-2xl font-bold leading-none" style={{ color: "#4AB7A6" }}>
-          97
-          <span className="text-xs font-normal text-slate-400">/100</span>
-        </div>
-        {/* Mini bar */}
-        <div className="w-full h-1.5 rounded-full bg-slate-100">
-          <div className="h-1.5 rounded-full" style={{ backgroundColor: "#4AB7A6", width: "97%" }} />
-        </div>
-      </div>
-
-      {/* Floating badge — Keyword Match (bottom left) */}
-      <div
-        className="absolute -bottom-3 -left-4 flex items-center gap-2 px-3 py-2 rounded-xl"
-        style={{
-          backgroundColor: "#ffffff",
-          border: "1px solid #dcfce7",
-          boxShadow: "0 4px 16px rgba(34,197,94,0.12)",
-        }}
-      >
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "#dcfce7" }}
+          key={i}
+          className={card.className}
+          style={{
+            transform: card.rotate,
+            transition: "transform 0.4s ease",
+          }}
         >
-          <Check className="w-3.5 h-3.5 text-green-600" />
+          <div
+            className="w-full h-full rounded-xl overflow-hidden bg-white"
+            style={{
+              border: "1px solid #e2e8f0",
+              boxShadow:
+                "0 24px 48px -12px rgba(15,23,42,0.18), 0 8px 16px -6px rgba(15,23,42,0.10)",
+            }}
+          >
+            <TemplatePreview layout={card.layout} accent={card.accent} />
+          </div>
         </div>
-        <div>
-          <div className="text-xs font-bold text-slate-800">Keyword Match</div>
-          <div className="text-xs font-semibold text-green-600">94%</div>
-        </div>
-      </div>
-
-      {/* Floating badge — AI Enhanced (bottom right) */}
-      <div
-        className="absolute -bottom-3 -right-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-        style={{
-          backgroundColor: "#f0fdf9",
-          border: "1px solid #ccfbef",
-          color: "#4AB7A6",
-          boxShadow: "0 2px 8px rgba(74,183,166,0.15)",
-        }}
-      >
-        <Sparkles className="w-3 h-3" />
-        AI-Enhanced
-      </div>
+      ))}
     </div>
   );
 }
@@ -493,64 +394,40 @@ export default function HomePage() {
       <main className="flex-1">
 
         {/* ════════════════════════════════════════════════════════════════
-            SECTION 1 — HERO
+            SECTION 1 — HERO + HIRED-AT LOGOS
         ════════════════════════════════════════════════════════════════ */}
-        <section className="relative overflow-hidden pt-16 pb-20 lg:pt-24 lg:pb-28" style={{ backgroundColor: "#ffffff" }}>
-          {/* Soft gradient depth + subtle grid pattern */}
+        <section
+          className="relative overflow-hidden pt-16 pb-12 lg:pt-24 lg:pb-16"
+          style={{ backgroundColor: "#eef1f8" }}
+        >
+          {/* Soft accent glow */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(60% 50% at 80% 20%, rgba(74,183,166,0.08) 0%, transparent 60%), radial-gradient(45% 40% at 15% 70%, rgba(14,165,233,0.05) 0%, transparent 60%)",
+                "radial-gradient(60% 50% at 85% 20%, rgba(74,183,166,0.10) 0%, transparent 60%), radial-gradient(45% 40% at 10% 80%, rgba(14,165,233,0.05) 0%, transparent 60%)",
             }}
-          />
-          <div
-            className="absolute inset-0 pointer-events-none opacity-[0.35]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px)",
-              backgroundSize: "48px 48px",
-              maskImage:
-                "radial-gradient(ellipse at top, black 30%, transparent 70%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at top, black 30%, transparent 70%)",
-            }}
-          />
-          {/* Teal glow top */}
-          <div
-            className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-            style={{ background: "linear-gradient(90deg, transparent 0%, #4AB7A6 50%, transparent 100%)" }}
           />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-[55%_45%] gap-12 lg:gap-16 items-center">
+            <div className="grid lg:grid-cols-[45%_55%] gap-10 lg:gap-12 items-center">
 
               {/* Left copy */}
               <div>
-                {/* Badge */}
-                <div
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-8 shadow-sm"
-                  style={{
-                    border: "1px solid #a7ece0",
-                    color: "#0f766e",
-                    background: "linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%)",
-                  }}
-                >
-                  <Star className="w-3.5 h-3.5 fill-current" style={{ color: "#4AB7A6" }} />
-                  AI-Powered · ATS-Optimized · Free to Start
-                </div>
-
                 <h1
                   className="text-5xl md:text-6xl font-bold leading-tight tracking-tight mb-5"
                   style={{ color: "#0f172a" }}
                 >
-                  Your Resume Is{" "}
-                  <span style={{ color: "#0f172a" }}>Costing You</span>{" "}
-                  Interviews.{" "}
-                  <span style={{ color: "#4AB7A6" }}>Let AI Fix That in 3 Minutes.</span>
+                  Your Resume Is Costing You Interviews.{" "}
+                  <span style={{ color: "#4AB7A6" }}>
+                    Let AI Fix That in 3 Minutes.
+                  </span>
                 </h1>
 
-                <p className="text-xl leading-relaxed mb-8 max-w-lg" style={{ color: "#64748b" }}>
+                <p
+                  className="text-xl leading-relaxed mb-8 max-w-lg"
+                  style={{ color: "#64748b" }}
+                >
                   HiredTodayApp&apos;s AI writes tailored bullet points, builds your full resume from scratch,
                   and checks every line for ATS compatibility — so your application actually reaches a human.
                 </p>
@@ -616,16 +493,66 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Right — Resume card mockup */}
+              {/* Right — Resume collage */}
               <div className="flex justify-center lg:justify-end">
-                <HeroResumeCard />
+                <HeroResumeCollage />
+              </div>
+            </div>
+
+            {/* Hired-at logo bar */}
+            <div className="mt-16 lg:mt-20">
+              <p
+                className="text-center text-base sm:text-lg font-bold mb-8"
+                style={{ color: "#0f172a" }}
+              >
+                Our candidates have been hired at:
+              </p>
+              <div
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-x-10 gap-y-8 items-center justify-items-center"
+                style={{ color: "#94a3b8" }}
+              >
+                <span className="text-xl font-semibold tracking-tight whitespace-nowrap">
+                  Booking.com
+                </span>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-7 h-7"
+                  fill="currentColor"
+                  aria-label="Apple"
+                  role="img"
+                >
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                </svg>
+                <span
+                  className="text-2xl font-extrabold italic tracking-tight"
+                  style={{ letterSpacing: "-0.03em" }}
+                >
+                  DHL
+                </span>
+                <span
+                  className="text-2xl font-medium lowercase tracking-tight"
+                  style={{ fontFamily: "serif" }}
+                >
+                  amazon
+                </span>
+                <span className="text-[11px] font-bold uppercase leading-tight text-center tracking-wider">
+                  American
+                  <br />
+                  Express
+                </span>
+                <span className="text-xl font-light tracking-tight whitespace-nowrap">
+                  <span className="font-bold">&gt;</span> accenture
+                </span>
+                <span className="text-xl font-bold tracking-[0.08em]">
+                  KPMG
+                </span>
               </div>
             </div>
           </div>
         </section>
 
         {/* ════════════════════════════════════════════════════════════════
-            SECTION 2 — TRUST BAR
+            SECTION 2 — TRUST BAR (STATS)
         ════════════════════════════════════════════════════════════════ */}
         <section
           className="py-10"

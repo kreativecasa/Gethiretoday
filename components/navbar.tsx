@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, LayoutDashboard } from "lucide-react";
-import { createClient } from "@/lib/supabase";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import Logo from "@/components/logo";
 
 const navLinks = [
@@ -31,6 +31,10 @@ export default function Navbar() {
 
   // Detect login state so logged-in users see "Dashboard" instead of "Log In".
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setAuthLoaded(true);
+      return;
+    }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsAuthed(!!user);
