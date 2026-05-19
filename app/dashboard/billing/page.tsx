@@ -25,6 +25,15 @@ const PRO_FEATURES = [
   'All premium templates',
 ];
 
+type Invoice = {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  currency: string;
+  url: string | null;
+};
+
 export default function BillingPage() {
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,12 +43,11 @@ export default function BillingPage() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  // After the cancel endpoint succeeds, flip the card to a "Cancelled"
-  // state in-place (no external redirect, no page reload). User continues
-  // to have Pro access until the end of their billing period.
   const [cancelled, setCancelled] = useState(false);
   const [cancelMessage, setCancelMessage] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -63,6 +71,16 @@ export default function BillingPage() {
         setActivatedAt(new Date(profile.updated_at));
       }
       setLoading(false);
+
+      // Fetch real invoices from Stripe
+      if (isProActive(profile)) {
+        setInvoicesLoading(true);
+        fetch('/api/stripe/invoices')
+          .then((r) => r.json())
+          .then((json) => { if (json.invoices) setInvoices(json.invoices); })
+          .catch(() => {})
+          .finally(() => setInvoicesLoading(false));
+      }
     });
   }, []);
 
@@ -124,15 +142,6 @@ export default function BillingPage() {
     return base.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   })();
 
-  // Billing history: one real entry based on when subscription was activated.
-  // We don't repeat the date in the description — the row already has its
-  // own date column on the right.
-  const billingEntry = activatedAt
-    ? {
-        date: activatedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        description: 'HiredTodayApp Pro — Monthly subscription',
-      }
-    : null;
 
   if (loading) {
     return (
@@ -379,22 +388,41 @@ export default function BillingPage() {
           </h2>
         </CardHeader>
         <CardContent>
-          {!isPro || !billingEntry ? (
-            <div className="py-8 text-center text-sm text-gray-400">
-              {isPro ? 'Billing history is managed via Gumroad.' : 'No billing history yet.'}
+          {invoicesLoading ? (
+            <div className="py-8 flex justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            </div>
+          ) : invoices.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {invoices.map((inv) => (
+                <div key={inv.id} className="flex items-center justify-between py-3.5 gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{inv.description}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{inv.date}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm font-semibold text-gray-900">
+                      ${inv.amount}
+                    </span>
+                    {inv.url ? (
+                      <a
+                        href={inv.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+                      >
+                        Paid
+                      </a>
+                    ) : (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700">Paid</span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              <div className="flex items-center justify-between py-3.5 gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{billingEntry.description}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{billingEntry.date}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-sm font-semibold text-gray-900">$9.99</span>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700">Paid</span>
-                </div>
-              </div>
+            <div className="py-8 text-center text-sm text-gray-400">
+              {isPro ? 'No invoices found.' : 'No billing history yet.'}
             </div>
           )}
         </CardContent>
