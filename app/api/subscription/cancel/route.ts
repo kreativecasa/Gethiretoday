@@ -12,6 +12,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { monthFromNow } from '@/lib/subscription';
+import { stripe } from '@/lib/stripe';
 
 export const runtime = 'nodejs';
 
@@ -131,16 +132,18 @@ export async function POST() {
     let subscriptionId: string | null = null;
     let profileEmail: string | null = null;
     let existingEndsAt: string | null = null;
+    let stripeCustomerId: string | null = null;
     try {
       const { data: profile } = await writer
         .from('profiles')
-        .select('subscription_id, email, subscription_ends_at')
+        .select('subscription_id, email, subscription_ends_at, stripe_customer_id')
         .eq('id', user.id)
         .single();
       if (profile) {
         subscriptionId = (profile.subscription_id as string | null) ?? null;
         profileEmail = (profile.email as string | null) ?? null;
         existingEndsAt = (profile.subscription_ends_at as string | null) ?? null;
+        stripeCustomerId = (profile.stripe_customer_id as string | null) ?? null;
       }
     } catch (err) {
       console.error('[subscription/cancel] profile load failed:', err);
@@ -148,14 +151,40 @@ export async function POST() {
 
     const email = user.email || profileEmail || null;
 
-    // 4. Commit the local cancellation FIRST, before touching Gumroad. This
-    //    guarantees the UI flips regardless of what Gumroad does.
+    // 4a. If the user has a Stripe subscription, cancel it at period end so
+    //     they are NOT billed again but retain access through the paid period.
+    let stripeEndsAt: string | null = null;
+    let stripeHandled = false;
+    if (stripeCustomerId) {
+      try {
+        // Find the active subscription for this Stripe customer.
+        const subs = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          status: 'active',
+          limit: 1,
+        });
+        const activeSub = subs.data[0];
+        if (activeSub) {
+          const updated = await stripe.subscriptions.update(activeSub.id, {
+            cancel_at_period_end: true,
+          });
+          stripeEndsAt = new Date(updated.current_period_end * 1000).toISOString();
+          stripeHandled = true;
+        }
+      } catch (err) {
+        console.error('[subscription/cancel] Stripe cancellation failed:', err);
+        // Fall through — we still flip the DB and return soft-success.
+      }
+    }
+
+    // 4b. Commit the local cancellation FIRST, before touching Gumroad. This
+    //     guarantees the UI flips regardless of what Gumroad does.
     //
-    //    Crucially: we keep (or compute) subscription_ends_at so the user
-    //    retains Pro access until the end of the cycle they already paid
-    //    for. If we somehow don't have a cycle-end on file, default to 30
-    //    days from now — the normal Gumroad billing interval.
-    const endsAt = existingEndsAt || monthFromNow();
+    //     Crucially: we keep (or compute) subscription_ends_at so the user
+    //     retains Pro access until the end of the cycle they already paid
+    //     for. Prefer the real period-end from Stripe, then any stored value,
+    //     then fall back to 30 days from now.
+    const endsAt = stripeEndsAt || existingEndsAt || monthFromNow();
     const localCommit = async () => {
       try {
         const { error } = await writer
@@ -178,8 +207,17 @@ export async function POST() {
 
     const localOk = await localCommit();
 
-    // 5. Best-effort Gumroad call. If any of this throws, we still return a
-    //    soft-success because the local DB is already flipped.
+    // 5. If Stripe already handled the cancellation, we're done.
+    if (stripeHandled) {
+      return softOk(
+        'stripe-cancelled',
+        'Subscription cancelled. Your Pro access remains active until the end of your current billing period. You can resubscribe any time.'
+      );
+    }
+
+    // 6. Best-effort Gumroad call for users on the Gumroad plan. If any of
+    //    this throws, we still return a soft-success because the local DB is
+    //    already flipped.
     const accessToken = process.env.GUMROAD_ACCESS_TOKEN;
     if (!accessToken) {
       return softOk(localOk ? 'local-only' : 'local-only-db-failed');

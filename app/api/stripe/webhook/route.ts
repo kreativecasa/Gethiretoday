@@ -65,9 +65,10 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
+        // Subscription fully ended — downgrade to free.
         const { error } = await getSupabaseAdmin()
           .from('profiles')
-          .update({ subscription_status: 'cancelled' })
+          .update({ subscription_status: 'free', subscription_ends_at: null })
           .eq('stripe_customer_id', customerId);
 
         if (error) {
@@ -84,7 +85,9 @@ export async function POST(req: Request) {
         switch (subscription.status) {
           case 'active':
           case 'trialing':
-            status = 'active';
+            // cancel_at_period_end means the user cancelled but still has
+            // access. Treat as cancelled (with grace period via ends_at).
+            status = subscription.cancel_at_period_end ? 'cancelled' : 'active';
             break;
           case 'past_due':
           case 'unpaid':
@@ -98,12 +101,19 @@ export async function POST(req: Request) {
             status = 'free';
         }
 
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
+
+        const updatePayload: Record<string, unknown> = {
+          subscription_status: status,
+          subscription_id: subscription.id,
+        };
+        if (periodEnd) updatePayload.subscription_ends_at = periodEnd;
+
         const { error } = await getSupabaseAdmin()
           .from('profiles')
-          .update({
-            subscription_status: status,
-            subscription_id: subscription.id,
-          })
+          .update(updatePayload)
           .eq('stripe_customer_id', customerId);
 
         if (error) {
