@@ -168,7 +168,9 @@ export async function POST() {
           const updated = await stripe.subscriptions.update(activeSub.id, {
             cancel_at_period_end: true,
           });
-          stripeEndsAt = new Date(updated.current_period_end * 1000).toISOString();
+          stripeEndsAt = updated.cancel_at
+            ? new Date(updated.cancel_at * 1000).toISOString()
+            : null;
           stripeHandled = true;
         }
       } catch (err) {

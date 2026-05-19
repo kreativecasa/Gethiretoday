@@ -101,8 +101,8 @@ export async function POST(req: Request) {
             status = 'free';
         }
 
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
+        const periodEnd = subscription.cancel_at
+          ? new Date(subscription.cancel_at * 1000).toISOString()
           : null;
 
         const updatePayload: Record<string, unknown> = {
