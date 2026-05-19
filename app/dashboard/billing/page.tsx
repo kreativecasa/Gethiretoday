@@ -358,24 +358,13 @@ export default function BillingPage() {
             </h2>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-7 rounded bg-gray-100 flex items-center justify-center">
-                  <CreditCard className="w-4 h-4 text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Managed via Gumroad</p>
-                  <p className="text-xs text-gray-400">Click Manage to update payment details</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-7 rounded bg-gray-100 flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-gray-400" />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-gray-200 text-sm font-medium"
-                onClick={handleManageSubscription}
-              >
-                Manage
-              </Button>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Managed via Gumroad</p>
+              </div>
             </div>
           </CardContent>
         </Card>
